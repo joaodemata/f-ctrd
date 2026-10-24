@@ -55,8 +55,11 @@ export interface ApiDefinition {
   parameters: ApiParameter[];
 }
 
-// providers/callbacks.go -> CallbackInfo
+// providers/callbacks.go -> CallbackInfo. `id` es la llave del FunctionRegistry y lo que se guarda en
+// callback_function; `tag` y `name` son solo para mostrar
 export interface CallbackInfo {
+  id: string;
+  tag: string;
   name: string;
   description: string;
   responseFormat: string;

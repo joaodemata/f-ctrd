@@ -40,8 +40,8 @@ CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_C
 - `src/models/`: TypeScript mirrors of the C-TRD models (`models/*.go` json tags) and catalogs (`common/constants.go`)
 - `src/hooks/useApiQuery.ts`: standard hook for reads: loading/refreshing/error state, abort on unmount, polling
 - `src/hooks/useApiMutation.ts`: standard hook for writes (create, upload): `run(input)`, pending/error/data, abort on unmount
-- `src/hooks/useHashRoute.ts`: hash navigation (`#/triggers`); routes and navbar items are the `ROUTES` table in `App.tsx`
-- `src/components/`: UI. One `*Page.tsx` per route: `Dashboard.tsx` (opportunities, owns filters/pagination), `TriggerPage.tsx`, `ConditionPage.tsx`, `GoogleTrendsPage.tsx`. Shared form pieces: `FormField`, `AssetPicker`, `CatalogSelect`, `ConditionPicker`, `ApiParameterInput`
+- `src/hooks/useHashRoute.ts`: hash navigation (`#/triggers/nuevo`); `useHashParams()` reads params after the path (`#/triggers/versiones?id=...`). Routes and navbar items are the `ROUTES` table in `App.tsx`; routes with `navPath` are detail views hidden from the navbar
+- `src/components/`: UI. One `*Page.tsx` per route: `Dashboard.tsx` (opportunities, owns filters/pagination), `TriggersPage.tsx` (active triggers, detail and edit via `TriggerEdit`), `TriggerVersionsPage.tsx` (all versions of one trigger), `TriggerPage.tsx` (create), `ConditionPage.tsx`, `GoogleTrendsPage.tsx`, `HelpPage.tsx` (functional help: opportunity life cycle, conditions, callbacks; it describes C-TRD behavior, so update it when the hook, the cronjobs or the callbacks change). Shared form pieces: `FormField`, `TriggerForm` (create and update), `AssetPicker`, `CatalogSelect`, `ConditionPicker`, `ApiParameterInput`
 - `src/utils/format.ts`: date, price and regex helpers
 
 ## Request / response contract
@@ -57,9 +57,12 @@ CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_C
 
 - Envelope: `{ status: "SUCCESS" | "FAIL", message, tracking, date, data }`. Success codes vary (`/list/opportunities` answers 202); errors are 400 (403 for local-only routes or a rejected CORS preflight).
 - GET routes read their params from the query string (`in:"query"` in the C-TRD format validates). Dates are `YYYY-MM-DD` or RFC3339; slices are repeated params.
-- `/list/opportunities`, `/list/apis`, `/list/assets` and `/list/conditions` return the total of matching documents in `data.page` (not the page number). `/list/catalogs?typeCatalog=` and `/list/callbacks?responseFormat=` are not paginated.
+- `/list/opportunities`, `/list/apis`, `/list/assets`, `/list/conditions` and `/list/triggers` return the total of matching documents in `data.page` (not the page number). `/list/catalogs?typeCatalog=` and `/list/callbacks?responseFormat=` are not paginated. A callback's `id` is what goes in `callbackFunction`; `name` is only a label.
 - Form validation errors come back in `ApiError.fieldErrors` keyed by the JSON field name of the body; forms show them next to the field and fall back to `ErrorBanner` for the rest.
 - `/operation/google_trends/upload` is multipart (`idAsset` + `file`, `.csv`, max 1 MB): pass a `FormData` as body and `client.ts` leaves the `Content-Type` to the browser.
+- `/list/triggers` only returns active triggers unless `showReferences=true`, which adds inactive and replaced versions and allows `tagStatus`; a non-active `tagStatus` without `showReferences` is rejected (DVLIS003). `idReferenceRoot` limits it to the versions of one trigger (the original and every version pointing to it); the trigger list only shows active ones and the versions view uses `showReferences` + `idReferenceRoot`.
+- Some old triggers store the zero ObjectID (`000000000000000000000000`) instead of `null` in `idReference`/`idReferenceRoot`; use `previousTriggerId` / `triggerRootId` from `models/trigger.ts`.
+- `PUT /operation/update/trigger` does not edit in place: it inactivates and logically deletes the trigger and creates a new version with a new id (`idReference`/`idReferenceRoot`). Only the active version can be updated, and the TradingView alert must switch to the new id.
 - Trigger timeframes must have a known duration in C-TRD (`common/parsers.go`), mirrored in `TIMEFRAME_MINUTES` (`models/catalog.ts`).
 - On `/list/opportunities`, `search` is used by C-TRD as a case-insensitive Mongo regex over `asset`, `action`, `status` and `tag_trigger`. Escape user text with `escapeRegex`. The other lists escape `search` themselves (literal match), so send it as typed. The status filter sends the anchored status **name** (`^Activa$`), not the tag.
 - Status counts are N calls with `limit=1` (one per status), because C-TRD has no aggregate endpoint.

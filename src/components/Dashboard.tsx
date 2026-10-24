@@ -86,6 +86,7 @@ export function Dashboard() {
             {list.lastUpdated ? `Actualizado ${list.lastUpdated.toLocaleTimeString('es')}` : 'Cargando…'}
             {pollIntervalMs > 0 && ` · refresco cada ${Math.round(pollIntervalMs / 1000)}s`}
           </p>
+          <p className="muted small">Todos los precios estan expresados en USD.</p>
         </div>
         <button type="button" className="button" onClick={refreshAll} disabled={list.isLoading || list.isRefreshing}>
           {list.isRefreshing ? 'Actualizando…' : 'Actualizar'}

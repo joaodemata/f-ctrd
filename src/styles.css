@@ -718,6 +718,236 @@ a {
   align-items: start;
 }
 
+/* Las condiciones de un trigger no tienen estado propio: sin columna de badge */
+.conditions--plain li {
+  grid-template-columns: 1fr;
+}
+
+.code-block {
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 240px;
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 0.9rem;
+}
+
+/* Versiones de un trigger */
+
+.versions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.version[data-current='true'] {
+  border-color: var(--status-active);
+}
+
+.version__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.version__head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.version__tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* El div agrupa dt y dd sin romper la grilla de .kv */
+.version__field {
+  display: contents;
+}
+
+.version__field[data-changed='true'] > dd {
+  font-weight: 600;
+}
+
+.version__changed {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.version__conditions {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+/* Ayuda */
+
+.help h3 {
+  margin: 8px 0 4px;
+  font-size: 1rem;
+}
+
+.help-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.help-section {
+  display: grid;
+  gap: 10px;
+  scroll-margin-top: 16px;
+  line-height: 1.5;
+}
+
+.help-list {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 4px;
+}
+
+/* Pasos encadenados: API -> formato -> callback... */
+.help-pipeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  counter-reset: paso;
+}
+
+.help-pipeline li {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  counter-increment: paso;
+  font-size: 0.9rem;
+}
+
+.help-pipeline strong::before {
+  content: counter(paso) '. ';
+  color: var(--accent);
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.help-card {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.help-card h3 {
+  margin: 0;
+}
+
+.help-table td {
+  vertical-align: top;
+}
+
+.help-faq {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.help-faq dt {
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.help-faq dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+.help-diagram {
+  overflow-x: auto;
+}
+
+.help-diagram svg {
+  display: block;
+  width: 100%;
+  min-width: 620px;
+  height: auto;
+}
+
+.help-diagram__node rect {
+  fill: var(--surface);
+  stroke: var(--tone, var(--border));
+  stroke-width: 2;
+}
+
+.help-diagram__title {
+  fill: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.help-diagram__subtitle {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.help-diagram__edges path {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+
+.help-diagram__edges .help-diagram__pending {
+  stroke-dasharray: 5 4;
+}
+
+.help-diagram__head {
+  fill: var(--muted);
+}
+
+.help-diagram__labels text {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
 /* Pagination */
 
 .pagination {
