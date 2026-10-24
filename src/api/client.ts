@@ -45,12 +45,15 @@ export async function request<T>(method: HttpMethod, path: string, options: Requ
   options.signal?.addEventListener('abort', onExternalAbort);
 
   try {
-    const hasBody = options.body !== undefined;
+    const { body: requestBody } = options;
+    // Un FormData se envia como multipart/form-data: el navegador arma el Content-Type con el boundary
+    const isFormData = requestBody instanceof FormData;
+    const isJson = requestBody !== undefined && !isFormData;
     const response = await fetch(buildUrl(path, options.query), {
       method,
       signal: controller.signal,
-      headers: { Accept: 'application/json', ...(hasBody ? { 'Content-Type': 'application/json' } : {}) },
-      body: hasBody ? JSON.stringify(options.body) : undefined,
+      headers: { Accept: 'application/json', ...(isJson ? { 'Content-Type': 'application/json' } : {}) },
+      body: isFormData ? requestBody : isJson ? JSON.stringify(requestBody) : undefined,
     });
 
     let body: unknown;
