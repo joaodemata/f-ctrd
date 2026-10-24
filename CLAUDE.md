@@ -39,7 +39,9 @@ CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_C
   - `<resource>.ts`: one file per C-TRD resource (e.g. `opportunities.ts`) with typed endpoint functions
 - `src/models/`: TypeScript mirrors of the C-TRD models (`models/*.go` json tags) and catalogs (`common/constants.go`)
 - `src/hooks/useApiQuery.ts`: standard hook for reads: loading/refreshing/error state, abort on unmount, polling
-- `src/components/`: UI. `Dashboard.tsx` is the opportunities screen and owns the filters/pagination state
+- `src/hooks/useApiMutation.ts`: standard hook for writes (create, upload): `run(input)`, pending/error/data, abort on unmount
+- `src/hooks/useHashRoute.ts`: hash navigation (`#/triggers`); routes and navbar items are the `ROUTES` table in `App.tsx`
+- `src/components/`: UI. One `*Page.tsx` per route: `Dashboard.tsx` (opportunities, owns filters/pagination), `TriggerPage.tsx`, `ConditionPage.tsx`, `GoogleTrendsPage.tsx`. Shared form pieces: `FormField`, `AssetPicker`, `CatalogSelect`, `ConditionPicker`, `ApiParameterInput`
 - `src/utils/format.ts`: date, price and regex helpers
 
 ## Request / response contract
@@ -55,8 +57,11 @@ CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_C
 
 - Envelope: `{ status: "SUCCESS" | "FAIL", message, tracking, date, data }`. Success codes vary (`/list/opportunities` answers 202); errors are 400 (403 for local-only routes or a rejected CORS preflight).
 - GET routes read their params from the query string (`in:"query"` in the C-TRD format validates). Dates are `YYYY-MM-DD` or RFC3339; slices are repeated params.
-- `/list/opportunities` and `/list/apis` return the total of matching documents in `data.page` (not the page number).
-- `search` is used by C-TRD as a case-insensitive Mongo regex over `asset`, `action`, `status` and `tag_trigger`. Escape user text with `escapeRegex`. The status filter sends the anchored status **name** (`^Activa$`), not the tag.
+- `/list/opportunities`, `/list/apis`, `/list/assets` and `/list/conditions` return the total of matching documents in `data.page` (not the page number). `/list/catalogs?typeCatalog=` and `/list/callbacks?responseFormat=` are not paginated.
+- Form validation errors come back in `ApiError.fieldErrors` keyed by the JSON field name of the body; forms show them next to the field and fall back to `ErrorBanner` for the rest.
+- `/operation/google_trends/upload` is multipart (`idAsset` + `file`, `.csv`, max 1 MB): pass a `FormData` as body and `client.ts` leaves the `Content-Type` to the browser.
+- Trigger timeframes must have a known duration in C-TRD (`common/parsers.go`), mirrored in `TIMEFRAME_MINUTES` (`models/catalog.ts`).
+- On `/list/opportunities`, `search` is used by C-TRD as a case-insensitive Mongo regex over `asset`, `action`, `status` and `tag_trigger`. Escape user text with `escapeRegex`. The other lists escape `search` themselves (literal match), so send it as typed. The status filter sends the anchored status **name** (`^Activa$`), not the tag.
 - Status counts are N calls with `limit=1` (one per status), because C-TRD has no aggregate endpoint.
 - `description_trigger`, `core_db`, ... are snake_case in the JSON; keep the TS models identical to the Go json tags.
 - Times are UTC; `0001-01-01...` is Go's zero time and is shown as empty (`parseApiDate`).

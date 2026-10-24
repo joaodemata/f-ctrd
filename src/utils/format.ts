@@ -1,6 +1,8 @@
 // Formateadores de presentacion. Las fechas del backend llegan en UTC y se muestran en hora local
 
 const dateTimeFormat = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' });
+// Fechas sin hora (ej: periodos de Google Trends): se guardan a medianoche UTC y se muestran en UTC para no correr el dia
+const dateFormat = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeZone: 'UTC' });
 const priceFormat = new Intl.NumberFormat('es', { maximumFractionDigits: 8 });
 const percentFormat = new Intl.NumberFormat('es', { style: 'percent', maximumFractionDigits: 1 });
 
@@ -16,6 +18,11 @@ export function parseApiDate(value: string | null | undefined): Date | null {
 export function formatDateTime(value: string | null | undefined): string {
   const date = parseApiDate(value);
   return date ? dateTimeFormat.format(date) : '—';
+}
+
+export function formatDate(value: string | null | undefined): string {
+  const date = parseApiDate(value);
+  return date ? dateFormat.format(date) : '—';
 }
 
 export function formatPrice(value: number | null | undefined): string {
@@ -34,12 +41,16 @@ export function formatTimeLeft(value: string | null | undefined, now: Date = new
   if (!date) return '—';
   const diffMs = date.getTime() - now.getTime();
   if (diffMs <= 0) return 'vencida';
+  return formatDuration(Math.floor(diffMs / 60_000));
+}
 
-  const minutes = Math.floor(diffMs / 60_000);
-  const days = Math.floor(minutes / 1440);
-  const hours = Math.floor((minutes % 1440) / 60);
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+// Duracion en minutos como texto corto (ej: "3d 4h", "2h 30m", "45m")
+export function formatDuration(totalMinutes: number): string {
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
   return `${minutes}m`;
 }
 
