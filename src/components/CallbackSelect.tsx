@@ -5,7 +5,8 @@ import { ErrorBanner } from './ErrorBanner';
 interface CallbackSelectProps {
   responseFormat: string;
   value: string;
-  onChange: (name: string) => void;
+  // Recibe el id del callback, que es lo que C-TRD espera en callbackFunction
+  onChange: (id: string) => void;
   invalid?: boolean;
 }
 
@@ -13,7 +14,7 @@ interface CallbackSelectProps {
 export function CallbackSelect({ responseFormat, value, onChange, invalid = false }: CallbackSelectProps) {
   const callbacks = useApiQuery((signal) => listCallbacks(responseFormat, signal), [responseFormat]);
   const options = callbacks.data?.callbacks ?? [];
-  const selected = options.find((callback) => callback.name === value);
+  const selected = options.find((callback) => callback.id === value);
 
   return (
     <>
@@ -27,7 +28,7 @@ export function CallbackSelect({ responseFormat, value, onChange, invalid = fals
           {callbacks.isLoading ? 'Cargando…' : options.length === 0 ? 'Ningun callback lee esta API' : 'Elige un callback'}
         </option>
         {options.map((callback) => (
-          <option key={callback.name} value={callback.name}>
+          <option key={callback.id} value={callback.id}>
             {callback.name}
           </option>
         ))}

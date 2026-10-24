@@ -5,7 +5,8 @@ import { ErrorBanner } from './ErrorBanner';
 
 interface CatalogSelectProps {
   type: CatalogType;
-  value: Catalog | null;
+  // Solo se usa el id; al editar un trigger no se tiene el catalogo completo
+  value: Pick<Catalog, 'id' | 'tag' | 'name'> | null;
   onChange: (catalog: Catalog | null) => void;
   placeholder: string;
   // Opciones que C-TRD rechazaria, se muestran deshabilitadas con el motivo

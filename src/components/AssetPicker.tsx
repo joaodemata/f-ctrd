@@ -7,14 +7,17 @@ import { ErrorBanner } from './ErrorBanner';
 
 const PICKER_LIMIT = 50;
 
+// Lo minimo para mostrar el asset elegido: al editar un trigger solo se conoce su id, tag y nombre
+export type AssetOption = Pick<Asset, 'id' | 'tag' | 'name'> & Partial<Pick<Asset, 'type_name'>>;
+
 interface AssetPickerProps {
-  value: Asset | null;
+  value: AssetOption | null;
   onChange: (asset: Asset | null) => void;
   disabled?: boolean;
   invalid?: boolean;
 }
 
-function assetLabel(asset: Asset): string {
+function assetLabel(asset: AssetOption): string {
   return `${asset.tag} · ${asset.name}${asset.type_name ? ` (${asset.type_name})` : ''}`;
 }
 
@@ -46,7 +49,11 @@ export function AssetPicker({ value, onChange, disabled = false, invalid = false
         />
         <select
           value={value?.id ?? ''}
-          onChange={(event) => onChange(options.find((asset) => asset.id === event.target.value) ?? value)}
+          onChange={(event) => {
+            // Si no esta en las opciones es el asset ya elegido: no cambia nada
+            const asset = options.find((option) => option.id === event.target.value);
+            if (asset) onChange(asset);
+          }}
           disabled={disabled || assets.isLoading}
           aria-invalid={invalid}
           aria-label="Asset"

@@ -10,11 +10,17 @@ interface FiltersProps {
   value: FilterValues;
   onChange: (value: FilterValues) => void;
   disabled?: boolean;
+  placeholder?: string;
 }
 
 const SEARCH_DEBOUNCE_MS = 350;
 
-export function Filters({ value, onChange, disabled = false }: FiltersProps) {
+export function Filters({
+  value,
+  onChange,
+  disabled = false,
+  placeholder = 'Activo, accion, estado o trigger',
+}: FiltersProps) {
   // El texto se edita localmente y se propaga con debounce para no pedir en cada tecla
   const [search, setSearch] = useState(value.search);
 
@@ -34,7 +40,7 @@ export function Filters({ value, onChange, disabled = false }: FiltersProps) {
         <span>Buscar</span>
         <input
           type="search"
-          placeholder="Activo, accion, estado o trigger"
+          placeholder={placeholder}
           value={search}
           maxLength={100}
           onChange={(event) => setSearch(event.target.value)}

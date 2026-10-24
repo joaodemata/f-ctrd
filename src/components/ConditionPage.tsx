@@ -147,7 +147,7 @@ export function ConditionPage() {
               <CopyButton text={mutation.data.idCondition} />
             </div>
           </div>
-          <a className="button" href="#/triggers">
+          <a className="button" href="#/triggers/nuevo">
             Usarla en un trigger
           </a>
         </div>

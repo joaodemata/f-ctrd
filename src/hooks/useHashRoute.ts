@@ -1,20 +1,31 @@
 import { useEffect, useState } from 'react';
 
 // Navegacion por hash (#/triggers) sin libreria de rutas: funciona con cualquier servidor estatico
-// porque el hash nunca llega al servidor
-function currentPath(): string {
-  const path = window.location.hash.replace(/^#/, '');
-  return path === '' ? '/' : path;
+// porque el hash nunca llega al servidor. Los parametros van despues de la ruta (#/triggers/versiones?id=...)
+function currentHash(): string {
+  return window.location.hash.replace(/^#/, '');
 }
 
-export function useHashRoute(): string {
-  const [path, setPath] = useState(currentPath);
+function useHash(): string {
+  const [hash, setHash] = useState(currentHash);
 
   useEffect(() => {
-    const onChange = () => setPath(currentPath());
+    const onChange = () => setHash(currentHash());
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
 
-  return path;
+  return hash;
+}
+
+// Ruta sin los parametros
+export function useHashRoute(): string {
+  const path = useHash().split('?')[0] ?? '';
+  return path === '' ? '/' : path;
+}
+
+// Parametros de la ruta actual
+export function useHashParams(): URLSearchParams {
+  const query = useHash().split('?')[1] ?? '';
+  return new URLSearchParams(query);
 }

@@ -8,9 +8,12 @@ import { StatusBadge } from './StatusBadge';
 
 const PICKER_LIMIT = 20;
 
+// Lo minimo para mostrar una condicion elegida: al editar un trigger solo se conoce su id y nombre
+export type ConditionOption = Pick<Condition, 'id' | 'nameCondition'>;
+
 interface ConditionPickerProps {
-  value: Condition[];
-  onChange: (conditions: Condition[]) => void;
+  value: ConditionOption[];
+  onChange: (conditions: ConditionOption[]) => void;
   disabled?: boolean;
 }
 
@@ -28,7 +31,7 @@ export function ConditionPicker({ value, onChange, disabled = false }: Condition
   const options = conditions.data?.conditions ?? [];
   const total = conditions.data?.page ?? 0;
 
-  const toggle = (condition: Condition) => {
+  const toggle = (condition: ConditionOption) => {
     onChange(
       selectedIds.has(condition.id) ? value.filter((item) => item.id !== condition.id) : [...value, condition],
     );
