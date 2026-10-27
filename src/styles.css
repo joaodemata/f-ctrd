@@ -19,6 +19,10 @@
   --status-finished: #1f6feb;
   --status-expired: #6e7781;
   --status-canceled: #cf222e;
+  --status-inactive: #d15704;
+
+  --shadow: 0 6px 20px rgb(15 23 42 / 0.08);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   color-scheme: light;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -48,6 +52,9 @@
     --status-finished: #58a6ff;
     --status-expired: #8b949e;
     --status-canceled: #f85149;
+    --status-inactive: #ff8a4c;
+
+    --shadow: 0 8px 24px rgb(0 0 0 / 0.35);
 
     color-scheme: dark;
   }
@@ -59,8 +66,89 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
   background: var(--bg);
   color: var(--text);
+}
+
+/* Fondo animado (MarketBackdrop): dos halos de color que se desplazan y el grafico de velas encima */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.backdrop::before,
+.backdrop::after {
+  content: '';
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.16;
+}
+
+.backdrop::before {
+  top: -30vmax;
+  left: -20vmax;
+  background: radial-gradient(circle, var(--accent), transparent 65%);
+  animation: drift-a 26s ease-in-out infinite alternate;
+}
+
+.backdrop::after {
+  bottom: -35vmax;
+  right: -25vmax;
+  background: radial-gradient(circle, var(--status-active), transparent 65%);
+  animation: drift-b 32s ease-in-out infinite alternate;
+}
+
+.backdrop__chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 20%, #000 55%, #000 85%, transparent);
+  mask-image: linear-gradient(to bottom, transparent 20%, #000 55%, #000 85%, transparent);
+}
+
+@keyframes drift-a {
+  to {
+    transform: translate(18vmax, 12vmax) scale(1.15);
+  }
+}
+
+@keyframes drift-b {
+  to {
+    transform: translate(-16vmax, -10vmax) scale(1.1);
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 60%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
 }
 
 h1 {
@@ -107,13 +195,45 @@ p {
   align-items: center;
   gap: 12px;
   padding: 12px 24px;
-  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
 
 .topbar__brand {
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
   letter-spacing: 0.04em;
+  background: linear-gradient(90deg, var(--accent), var(--status-active));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.topbar__logo {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--status-active);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  animation: draw-logo 1.2s var(--ease) both;
+}
+
+@keyframes draw-logo {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .topbar__api {
@@ -134,6 +254,9 @@ p {
   color: var(--muted);
   text-decoration: none;
   font-weight: 500;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .navbar__link:hover {
@@ -142,10 +265,11 @@ p {
 }
 
 .navbar__link[aria-current='page'] {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent);
 }
 
+/* Cada ruta se remonta (key) al navegar, asi la entrada se anima en cada cambio de pagina */
 .dashboard,
 .page {
   max-width: 1280px;
@@ -153,6 +277,7 @@ p {
   padding: 24px;
   display: grid;
   gap: 16px;
+  animation: page-in 0.45s var(--ease) both;
 }
 
 .page--narrow {
@@ -173,9 +298,11 @@ p {
 }
 
 .panel {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
   border: 1px solid var(--border);
   border-radius: 10px;
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
@@ -204,10 +331,21 @@ p {
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
+  transition:
+    border-color 0.2s,
+    transform 0.15s var(--ease),
+    box-shadow 0.2s,
+    filter 0.2s;
 }
 
 .button:hover:not(:disabled) {
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .button:disabled {
@@ -224,6 +362,10 @@ p {
   border-color: var(--accent);
   color: var(--accent-text);
   font-weight: 600;
+}
+
+.button--primary:hover:not(:disabled) {
+  filter: brightness(1.08);
 }
 
 .button--small {
@@ -314,13 +456,39 @@ a {
   border-radius: 10px;
   border: 1px solid var(--border);
   border-left: 4px solid var(--tone);
-  background: var(--surface);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tone) 12%, var(--surface)), var(--surface) 70%);
   color: var(--text);
   cursor: pointer;
+  animation: page-in 0.5s var(--ease) both;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+.summary__card:nth-child(2) {
+  animation-delay: 40ms;
+}
+.summary__card:nth-child(3) {
+  animation-delay: 80ms;
+}
+.summary__card:nth-child(4) {
+  animation-delay: 120ms;
+}
+.summary__card:nth-child(5) {
+  animation-delay: 160ms;
+}
+.summary__card:nth-child(6) {
+  animation-delay: 200ms;
+}
+
+.summary__card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--tone) 22%, transparent);
 }
 
 .summary__card[aria-pressed='true'] {
-  background: var(--surface-2);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tone) 24%, var(--surface)), var(--surface) 80%);
   border-color: var(--tone);
 }
 
@@ -333,9 +501,10 @@ a {
   font-size: 1.6rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
+  color: var(--tone);
 }
 
-/* Status colors, shared by cards and badges */
+/* Status colors, shared by cards, badges and table rows */
 
 [data-status='OPPORTUNITY-ONGOING'] {
   --tone: var(--status-ongoing);
@@ -347,23 +516,29 @@ a {
 [data-status='OPPORTUNITY-FINISHED'] {
   --tone: var(--status-finished);
 }
-[data-status='OPPORTUNITY-EXPIRED'],
-[data-status='STATUS-INACTIVE'] {
+[data-status='OPPORTUNITY-EXPIRED'] {
   --tone: var(--status-expired);
+}
+[data-status='STATUS-INACTIVE'] {
+  --tone: var(--status-inactive);
 }
 [data-status='OPPORTUNITY-CANCELED'] {
   --tone: var(--status-canceled);
 }
 
+/* Sin --tone propio: un --tone aqui pisaria al de [data-status] (misma especificidad, va despues) */
 .status-badge {
-  --tone: var(--muted);
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 2px 10px 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--muted)) 40%, transparent);
+  background: color-mix(in srgb, var(--tone, var(--muted)) 14%, transparent);
   white-space: nowrap;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--tone);
+  color: var(--tone, var(--muted));
 }
 
 .status-badge::before {
@@ -371,7 +546,14 @@ a {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--tone);
+  background: var(--tone, var(--muted));
+}
+
+/* Estados vivos (oportunidad activa o en curso, condicion cumplida): el punto late */
+.status-badge[data-status='OPPORTUNITY-ACTIVE']::before,
+.status-badge[data-status='OPPORTUNITY-ONGOING']::before,
+.status-badge[data-status='STATUS-ACTIVE']::before {
+  animation: pulse 1.8s ease-out infinite;
 }
 
 /* Filters */
@@ -586,6 +768,7 @@ a {
   border: 1px solid var(--success-border);
   background: var(--success-bg);
   color: var(--success-text);
+  animation: page-in 0.35s var(--ease) both;
 }
 
 .copy-row {
@@ -612,6 +795,7 @@ a {
   border: 1px solid var(--danger-border);
   background: var(--danger-bg);
   color: var(--danger-text);
+  animation: page-in 0.35s var(--ease) both;
 }
 
 .error-banner ul {
@@ -657,14 +841,63 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+.table__row {
+  animation: row-in 0.4s var(--ease) both;
+  transition: background 0.2s;
+}
+
+/* Entrada escalonada. Las filas se identifican por id, asi el polling solo anima las nuevas */
+.table__row:nth-child(2) {
+  animation-delay: 30ms;
+}
+.table__row:nth-child(3) {
+  animation-delay: 60ms;
+}
+.table__row:nth-child(4) {
+  animation-delay: 90ms;
+}
+.table__row:nth-child(5) {
+  animation-delay: 120ms;
+}
+.table__row:nth-child(6) {
+  animation-delay: 150ms;
+}
+.table__row:nth-child(7) {
+  animation-delay: 180ms;
+}
+.table__row:nth-child(8) {
+  animation-delay: 210ms;
+}
+.table__row:nth-child(9) {
+  animation-delay: 240ms;
+}
+.table__row:nth-child(n + 10) {
+  animation-delay: 270ms;
+}
+
 .table__row:hover,
 .table__row[data-expanded='true'] {
   background: var(--surface-2);
 }
 
+/* Filas con estado: borde izquierdo y hover del color del estado */
+.table__row[data-status] > td:first-child,
+.table__detail[data-status] > td:first-child {
+  box-shadow: inset 3px 0 0 var(--tone, transparent);
+}
+
+.table__row[data-status]:hover,
+.table__row[data-status][data-expanded='true'] {
+  background: color-mix(in srgb, var(--tone, transparent) 8%, var(--surface));
+}
+
 .table__detail > td {
   background: var(--surface-2);
   padding: 0;
+}
+
+.table__detail .detail {
+  animation: page-in 0.3s var(--ease) both;
 }
 
 /* Detail */
@@ -960,6 +1193,17 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @media (max-width: 640px) {

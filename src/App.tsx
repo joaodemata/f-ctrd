@@ -4,6 +4,7 @@ import { ConditionPage } from './components/ConditionPage';
 import { Dashboard } from './components/Dashboard';
 import { GoogleTrendsPage } from './components/GoogleTrendsPage';
 import { HelpPage } from './components/HelpPage';
+import { MarketBackdrop } from './components/MarketBackdrop';
 import { NavBar, type NavItem } from './components/NavBar';
 import { TriggerPage } from './components/TriggerPage';
 import { TriggerVersionsPage } from './components/TriggerVersionsPage';
@@ -36,8 +37,15 @@ export function App() {
 
   return (
     <>
+      <MarketBackdrop />
       <header className="topbar">
-        <span className="topbar__brand">F-CTRD</span>
+        <span className="topbar__brand">
+          <svg className="topbar__logo" viewBox="0 0 24 24" aria-hidden="true">
+            <polyline points="3,17 9,11 13,14 21,6" />
+            <polyline points="15,6 21,6 21,12" />
+          </svg>
+          F-CTRD
+        </span>
         <NavBar items={NAV_ITEMS} currentPath={route.navPath ?? route.path} />
         <span className="muted small topbar__api">API {apiBaseUrl}</span>
       </header>
