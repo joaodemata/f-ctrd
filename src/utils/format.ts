@@ -26,7 +26,7 @@ export function formatDate(value: string | null | undefined): string {
 }
 
 export function formatPrice(value: number | null | undefined): string {
-  return value === null || value === undefined ? '—' : priceFormat.format(value);
+  return value === null || value === undefined ? '—' : `$${priceFormat.format(value)}`;
 }
 
 export function formatProbability(value: number | undefined): string {

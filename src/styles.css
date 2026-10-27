@@ -935,10 +935,6 @@ a {
   stroke-width: 1.5;
 }
 
-.help-diagram__edges .help-diagram__pending {
-  stroke-dasharray: 5 4;
-}
-
 .help-diagram__head {
   fill: var(--muted);
 }

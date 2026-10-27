@@ -1,12 +1,14 @@
 import { listCallbacks } from '../api/callbacks';
 import { useApiQuery } from '../hooks/useApiQuery';
+import type { CallbackInfo } from '../models/apiDefinition';
 import { ErrorBanner } from './ErrorBanner';
 
 interface CallbackSelectProps {
   responseFormat: string;
+  // Id del callback elegido, que es lo que C-TRD espera en callbackFunction
   value: string;
-  // Recibe el id del callback, que es lo que C-TRD espera en callbackFunction
-  onChange: (id: string) => void;
+  // Recibe el callback completo para mostrar sus parametros
+  onChange: (callback: CallbackInfo | null) => void;
   invalid?: boolean;
 }
 
@@ -20,7 +22,7 @@ export function CallbackSelect({ responseFormat, value, onChange, invalid = fals
     <>
       <select
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange(options.find((callback) => callback.id === event.target.value) ?? null)}
         disabled={callbacks.isLoading}
         aria-invalid={invalid}
       >

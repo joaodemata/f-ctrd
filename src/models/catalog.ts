@@ -3,19 +3,21 @@ import type { ObjectId } from './opportunity';
 // Espejo de models/catalogs_model.go en C-TRD (GET /list/catalogs solo proyecta estos campos)
 export interface Catalog {
   id: ObjectId;
-  type_catalog: string;
+  typeCatalog: string;
   tag: string;
   name: string;
   description: string;
 }
 
-// Valores de type_catalog (common/constants.go)
+// Valores de typeCatalog (common/constants.go)
 export const CatalogType = {
   GenericStatus: 'GENERIC_STATUS',
   OpportunityStatus: 'OPPORTUNITY_STATUS',
   Action: 'TYPE_ACTION',
   Asset: 'TYPE_ASSET',
   CandleStick: 'TYPE_CANDLE_STICK',
+  CancelReason: 'CANCEL_REASON',
+  Condition: 'TYPE_CONDITION',
 } as const;
 
 export type CatalogType = (typeof CatalogType)[keyof typeof CatalogType];

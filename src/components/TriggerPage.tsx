@@ -20,7 +20,7 @@ export function TriggerPage() {
             El trigger queda <strong>activo</strong>. Cada vez que TradingView llame al webhook se crea una oportunidad
             (si no hay otra en curso o activa del mismo trigger).
           </p>
-          <TradingViewHookInfo idTrigger={mutation.data.idTrigger} />
+          <TradingViewHookInfo idWebhook={mutation.data.idWebhook} />
           <div className="form-actions">
             <button type="button" className="button button--primary" onClick={mutation.reset}>
               Crear otro trigger

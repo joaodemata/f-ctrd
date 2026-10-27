@@ -2,12 +2,28 @@ import { useState } from 'react';
 import { listConditions } from '../api/conditions';
 import { useApiQuery } from '../hooks/useApiQuery';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import type { Condition } from '../models/condition';
 import { formatDateTime, formatDuration } from '../utils/format';
 import { ErrorBanner } from './ErrorBanner';
 import { Pagination } from './Pagination';
 import { StatusBadge } from './StatusBadge';
 
 const DEFAULT_LIMIT = 10;
+
+// Valores con los que se configuro el callback (ej: umbrales); nada si no tiene
+function CallbackParametersList({ parameters }: { parameters: Condition['parametersCallback'] }) {
+  const entries = Object.entries(parameters ?? {});
+  if (entries.length === 0) return null;
+  return (
+    <div className="muted small">
+      {entries.map(([name, value]) => (
+        <div key={name}>
+          {name}: <code>{String(value)}</code>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // Listado paginado de condiciones registradas. `refreshKey` cambia cuando se crea una condicion nueva
 export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
@@ -54,6 +70,7 @@ export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
                   <thead>
                     <tr>
                       <th scope="col">Condicion</th>
+                      <th scope="col">Tipo</th>
                       <th scope="col">Proveedor</th>
                       <th scope="col">Callback</th>
                       <th scope="col">Cada</th>
@@ -65,26 +82,27 @@ export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
                     {list.data.conditions.map((condition) => (
                       <tr key={condition.id} className="table__row">
                         <td>
-                          <strong>{condition.nameCondition}</strong>
-                          {condition.descriptionCondition && (
-                            <div className="muted small">{condition.descriptionCondition}</div>
-                          )}
+                          <strong>{condition.name}</strong>
+                          {condition.tag && <div className="muted small">{condition.tag}</div>}
+                          {condition.description && <div className="muted small">{condition.description}</div>}
                         </td>
+                        <td>{condition.nameTypeCondition || '—'}</td>
                         <td>{condition.nameProvider}</td>
                         <td>
                           <code className="small">{condition.callbackFunction}</code>
+                          <CallbackParametersList parameters={condition.parametersCallback} />
                         </td>
                         <td>
-                          {condition.is_webhook_only
+                          {condition.isWebhookOnly
                             ? 'Webhook'
-                            : condition.interval_seconds
-                              ? formatDuration(Math.round(condition.interval_seconds / 60))
+                            : condition.intervalSeconds
+                              ? formatDuration(Math.round(condition.intervalSeconds / 60))
                               : '—'}
                         </td>
                         <td>
-                          <StatusBadge tag={condition.tag_status} label={condition.status || condition.tag_status} />
+                          <StatusBadge tag={condition.tagStatus} label={condition.status || condition.tagStatus} />
                         </td>
-                        <td>{formatDateTime(condition.last_executed_at)}</td>
+                        <td>{formatDateTime(condition.lastExecutedAt)}</td>
                       </tr>
                     ))}
                   </tbody>

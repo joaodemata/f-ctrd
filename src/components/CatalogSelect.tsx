@@ -15,7 +15,7 @@ interface CatalogSelectProps {
   invalid?: boolean;
 }
 
-// Select con los catalogos de un type_catalog (GET /list/catalogs)
+// Select con los catalogos de un typeCatalog (GET /list/catalogs)
 export function CatalogSelect({
   type,
   value,

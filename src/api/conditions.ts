@@ -23,13 +23,17 @@ export function listConditions(
 }
 
 // Body de POST /operation/create/condition (format_validates/operation_format_validate.go -> CreateConditionFormat).
-// Los valores de los parametros van como texto; C-TRD los valida contra el dataType de la API
+// Los valores de los parametros van como texto; C-TRD los valida contra el dataType de la API (parameters) o del
+// callback (parametersCallback). El tag es unico entre las condiciones no borradas (DVOPR020)
 export interface CreateConditionBody {
+  tag: string;
+  name: string;
+  description: string;
+  idTypeCondition: string; // catalogo TYPE_CONDITION
   idApi: string;
-  nameCondition: string;
-  descriptionCondition: string;
   parameters: Record<string, string>;
   callbackFunction: string;
+  parametersCallback: Record<string, string>;
   intervalSeconds: number; // minimo 60
 }
 
