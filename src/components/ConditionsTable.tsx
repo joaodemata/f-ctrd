@@ -80,7 +80,7 @@ export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
                   </thead>
                   <tbody>
                     {list.data.conditions.map((condition) => (
-                      <tr key={condition.id} className="table__row">
+                      <tr key={condition.id} className="table__row" data-status={condition.tagStatus}>
                         <td>
                           <strong>{condition.name}</strong>
                           {condition.tag && <div className="muted small">{condition.tag}</div>}

@@ -45,7 +45,7 @@ export function OpportunitiesTable({ opportunities }: OpportunitiesTableProps) {
             const expanded = expandedId === opportunity.id;
             return (
               <Fragment key={opportunity.id}>
-                <tr className="table__row" data-expanded={expanded}>
+                <tr className="table__row" data-expanded={expanded} data-status={opportunity.tagStatus}>
                   <td>
                     <button
                       type="button"
@@ -71,7 +71,7 @@ export function OpportunitiesTable({ opportunities }: OpportunitiesTableProps) {
                   <td title={formatDateTime(opportunity.expirationDate)}>{formatTimeLeft(opportunity.expirationDate)}</td>
                 </tr>
                 {expanded && (
-                  <tr className="table__detail">
+                  <tr className="table__detail" data-status={opportunity.tagStatus}>
                     <td colSpan={COLUMN_COUNT}>
                       <OpportunityDetail opportunity={opportunity} />
                     </td>
