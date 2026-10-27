@@ -7,7 +7,12 @@ import type { ApiDefinition, CallbackInfo } from '../models/apiDefinition';
 import { CatalogType, type Catalog } from '../models/catalog';
 import { CONDITION_MIN_INTERVAL_SECONDS } from '../models/condition';
 import { formatDuration } from '../utils/format';
-import { ApiParameterInput, validateParameterValue, type ParameterDefinition } from './ApiParameterInput';
+import {
+  ApiParameterInput,
+  parameterRangeText,
+  validateParameterValue,
+  type ParameterDefinition,
+} from './ApiParameterInput';
 import { CallbackSelect } from './CallbackSelect';
 import { CatalogSelect } from './CatalogSelect';
 import { ConditionsTable } from './ConditionsTable';
@@ -91,6 +96,7 @@ function ParameterFields({ parameters, values, errors, onChange }: ParameterFiel
           hint={
             <>
               {parameter.description}
+              {parameterRangeText(parameter) && ` Valor ${parameterRangeText(parameter)}.`}
               {parameter.defaultValue !== null && ` Por defecto: ${parameter.defaultValue}.`}
             </>
           }

@@ -8,6 +8,7 @@ import { useApiQuery } from '../hooks/useApiQuery';
 import type { ApiDefinition, CallbackInfo } from '../models/apiDefinition';
 import { CatalogType } from '../models/catalog';
 import { OpportunityStatusTag } from '../models/opportunity';
+import { parameterRangeText } from './ApiParameterInput';
 import { ErrorBanner } from './ErrorBanner';
 import { StatusBadge } from './StatusBadge';
 
@@ -593,6 +594,7 @@ function CallbackCatalog() {
                           <span key={parameter.name}>
                             {paramIndex > 0 && ', '}
                             <code>{parameter.name}</code>
+                            {parameterRangeText(parameter) && ` (${parameterRangeText(parameter)})`}
                             {parameter.defaultValue !== null && ` (por defecto ${parameter.defaultValue})`}
                           </span>
                         ))}

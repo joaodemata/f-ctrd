@@ -64,6 +64,9 @@ export interface CallbackParameter {
   dataType: string;
   isRequired: boolean;
   defaultValue: string | null;
+  // Rango inclusivo del valor, solo para INTEGER y FLOAT. null si no tiene limite (SOPRE053 si se sale)
+  minValue: number | null;
+  maxValue: number | null;
 }
 
 // providers/callbacks.go -> CallbackInfo. `id` es la llave del FunctionRegistry y lo que se guarda en
