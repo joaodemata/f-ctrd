@@ -50,7 +50,7 @@ export function triggerFormValues(trigger: Trigger): TriggerFormValues {
     maxCandlestickQty: String(trigger.maxCandlestickQty),
     conditions: (trigger.conditions ?? []).map((condition) => ({
       id: condition.idCondition,
-      nameCondition: condition.nameCondition,
+      name: condition.nameCondition,
     })),
   };
 }

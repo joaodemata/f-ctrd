@@ -41,8 +41,10 @@ export interface CreateTriggerBody {
   maxCandlestickQty: number; // mayor a 0
 }
 
+// idWebhook es el id que va en la alerta de TradingView; se mantiene entre las versiones del trigger
 export interface CreateTriggerData {
   idTrigger: string;
+  idWebhook: string;
 }
 
 export function createTrigger(body: CreateTriggerBody, signal?: AbortSignal): Promise<ApiResult<CreateTriggerData>> {
@@ -56,11 +58,12 @@ export interface UpdateTriggerBody extends CreateTriggerBody {
 }
 
 // C-TRD no edita el documento: borra el anterior (queda Inactivo) y crea uno nuevo con otro id que lo referencia.
-// El pine_code se conserva
+// El pine_code y el idWebhook se conservan, asi que la alerta de TradingView no cambia
 export interface UpdateTriggerData {
   idTrigger: string;
   idPreviousTrigger: string;
   idReferenceRoot: string;
+  idWebhook: string;
 }
 
 export function updateTrigger(body: UpdateTriggerBody, signal?: AbortSignal): Promise<ApiResult<UpdateTriggerData>> {

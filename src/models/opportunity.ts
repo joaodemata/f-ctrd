@@ -55,8 +55,7 @@ export interface Opportunity {
   idTrigger: ObjectId;
   tagTrigger: string;
   trigger: string;
-  // El backend lo serializa en snake_case
-  description_trigger: string;
+  descriptionTrigger: string;
   idAsset: ObjectId;
   tagAsset: string;
   asset: string;

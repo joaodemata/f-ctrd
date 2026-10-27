@@ -1,14 +1,22 @@
 import { useState } from 'react';
 import type { Asset } from '../models/asset';
-import { ApiParameterOptionsSource, ApiParameterType, type ApiParameter } from '../models/apiDefinition';
+import {
+  ApiParameterOptionsSource,
+  ApiParameterType,
+  type ApiParameterOptions,
+  type CallbackParameter,
+} from '../models/apiDefinition';
 import { AssetPicker } from './AssetPicker';
 
 // Las APIs que leen datos por asset (ej: el CSV de Google Trends) reciben el id del asset como texto libre;
 // se muestra el selector de assets en lugar de pedir el ObjectID
 const ASSET_PARAMETER_NAME = 'idAsset';
 
+// Parametro de una API (ApiParameter) o de un callback (CallbackParameter, sin opciones)
+export type ParameterDefinition = CallbackParameter & { options?: ApiParameterOptions | null };
+
 interface ApiParameterInputProps {
-  parameter: ApiParameter;
+  parameter: ParameterDefinition;
   value: string;
   onChange: (value: string) => void;
   invalid?: boolean;
@@ -93,7 +101,7 @@ export function ApiParameterInput({ parameter, value, onChange, invalid = false 
 }
 
 // Validacion local equivalente a parseParameterValue en C-TRD. Retorna el mensaje o null si es valido
-export function validateParameterValue(parameter: ApiParameter, value: string): string | null {
+export function validateParameterValue(parameter: ParameterDefinition, value: string): string | null {
   if (value === '') {
     return parameter.isRequired && parameter.defaultValue === null ? 'Este parametro es obligatorio.' : null;
   }

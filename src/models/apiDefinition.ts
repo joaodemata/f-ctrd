@@ -55,6 +55,17 @@ export interface ApiDefinition {
   parameters: ApiParameter[];
 }
 
+// providers/callbacks.go -> CallbackParameter. Parametro que la condicion puede personalizar (ej: un umbral);
+// se valida igual que un parametro libre de API (sin opciones)
+export interface CallbackParameter {
+  name: string;
+  label: string;
+  description: string;
+  dataType: string;
+  isRequired: boolean;
+  defaultValue: string | null;
+}
+
 // providers/callbacks.go -> CallbackInfo. `id` es la llave del FunctionRegistry y lo que se guarda en
 // callback_function; `tag` y `name` son solo para mostrar
 export interface CallbackInfo {
@@ -63,4 +74,5 @@ export interface CallbackInfo {
   name: string;
   description: string;
   responseFormat: string;
+  parameters: CallbackParameter[];
 }

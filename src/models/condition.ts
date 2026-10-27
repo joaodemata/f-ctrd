@@ -1,24 +1,30 @@
 import type { ObjectId } from './opportunity';
 
-// Espejo de models/conditions_model.go en C-TRD. Los tags json mezclan camelCase y snake_case, se mantienen igual.
-// GET /list/conditions no proyecta la peticion (http_request) ni el lock del cronjob
+// Espejo de models/conditions_model.go en C-TRD. Tags json en camelCase. C-TRD no envia la peticion (httpRequest)
+// ni la metadata, y GET /list/conditions no proyecta el lock del cronjob
 export interface Condition {
   id: ObjectId;
+  tag: string;
+  name: string;
+  description: string;
   idProvider: ObjectId;
   nameProvider: string;
-  nameCondition: string;
-  descriptionCondition: string;
-  metadata: unknown;
-  is_webhook_only: boolean;
-  next_execution_at: string | null;
-  interval_seconds: number | null;
-  last_executed_at: string | null;
+  // Catalogo TYPE_CONDITION que clasifica la condicion. Las condiciones anteriores a la clasificacion no lo tienen
+  idTypeCondition: ObjectId;
+  nameTypeCondition: string;
+  tagTypeCondition: string;
+  isWebhookOnly: boolean;
+  nextExecutionAt: string | null;
+  intervalSeconds: number | null;
+  lastExecutedAt: string | null;
   idApi: ObjectId;
   callbackFunction: string;
-  id_status: ObjectId;
-  tag_status: string;
+  // Valores ya tipados (numero, booleano, texto) de los parametros del callback; {} si no tiene
+  parametersCallback: Record<string, unknown> | null;
+  idStatus: ObjectId;
+  tagStatus: string;
   status: string;
-  created_date: string;
+  createdDate: string;
 }
 
 // Intervalo minimo al crear una condicion (ConditionMinIntervalSeconds en common/constants.go)

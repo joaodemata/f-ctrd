@@ -32,7 +32,7 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
         <div>
           <h4>Trigger</h4>
           <p>{opportunity.trigger || opportunity.tagTrigger}</p>
-          {opportunity.description_trigger && <p className="muted">{opportunity.description_trigger}</p>}
+          {opportunity.descriptionTrigger && <p className="muted">{opportunity.descriptionTrigger}</p>}
         </div>
         <div>
           <h4>Precios</h4>

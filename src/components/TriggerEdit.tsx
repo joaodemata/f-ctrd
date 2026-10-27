@@ -19,11 +19,15 @@ export function TriggerEdit({ trigger, onClose }: TriggerEditProps) {
       <section className="panel panel--padded success">
         <p>
           Se creo una nueva version <strong>activa</strong> del trigger y la anterior quedo <strong>inactiva</strong>.
-          La version nueva tiene <strong>otro ID</strong>: actualiza el body de la alerta en TradingView, el webhook ya
-          no acepta el ID anterior.
+          La version nueva tiene otro ID, pero conserva el <strong>ID del webhook</strong>: la alerta de TradingView no
+          cambia y ahora la recibe la version nueva.
         </p>
-        <TradingViewHookInfo idTrigger={mutation.data.idTrigger} />
+        <TradingViewHookInfo idWebhook={mutation.data.idWebhook} />
         <dl className="kv kv--wide">
+          <dt>ID nuevo</dt>
+          <dd>
+            <code>{mutation.data.idTrigger}</code>
+          </dd>
           <dt>ID anterior</dt>
           <dd>
             <code>{mutation.data.idPreviousTrigger}</code>

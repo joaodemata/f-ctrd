@@ -8,7 +8,7 @@ import { ErrorBanner } from './ErrorBanner';
 const PICKER_LIMIT = 50;
 
 // Lo minimo para mostrar el asset elegido: al editar un trigger solo se conoce su id, tag y nombre
-export type AssetOption = Pick<Asset, 'id' | 'tag' | 'name'> & Partial<Pick<Asset, 'type_name'>>;
+export type AssetOption = Pick<Asset, 'id' | 'tag' | 'name'> & Partial<Pick<Asset, 'typeName'>>;
 
 interface AssetPickerProps {
   value: AssetOption | null;
@@ -18,7 +18,7 @@ interface AssetPickerProps {
 }
 
 function assetLabel(asset: AssetOption): string {
-  return `${asset.tag} · ${asset.name}${asset.type_name ? ` (${asset.type_name})` : ''}`;
+  return `${asset.tag} · ${asset.name}${asset.typeName ? ` (${asset.typeName})` : ''}`;
 }
 
 // Selector de asset con busqueda en C-TRD (GET /list/assets). El asset elegido se conserva aunque la busqueda cambie

@@ -1,21 +1,25 @@
 import type { ReactNode } from 'react';
 import { listApis } from '../api/apis';
 import { listCallbacks } from '../api/callbacks';
+import { listCatalogs } from '../api/catalogs';
 import { apiBaseUrl } from '../api/config';
 import type { ApiResult } from '../api/types';
 import { useApiQuery } from '../hooks/useApiQuery';
 import type { ApiDefinition, CallbackInfo } from '../models/apiDefinition';
+import { CatalogType } from '../models/catalog';
 import { OpportunityStatusTag } from '../models/opportunity';
 import { ErrorBanner } from './ErrorBanner';
 import { StatusBadge } from './StatusBadge';
 
 // Ayuda funcional de C-TRD. Lo que se explica aqui sale del codigo de C-TRD (controllers/hook.controller.go,
-// cronjobs/check_conditions.go, cronjobs/check_opportunities.go, providers/callbacks.go); si cambia alli, revisar
+// data_validates/hook_data_validate.go, data_validates/operation_data_validate.go, cronjobs/check_conditions.go,
+// cronjobs/check_opportunities.go, providers/callbacks.go); si cambia alli, revisar
 
 const SECTIONS = [
   { id: 'ayuda-resumen', label: 'Como encaja todo' },
   { id: 'ayuda-ciclo', label: 'Ciclo de vida' },
   { id: 'ayuda-triggers', label: 'Triggers y alertas' },
+  { id: 'ayuda-cancelar', label: 'Cancelar' },
   { id: 'ayuda-condiciones', label: 'Condiciones' },
   { id: 'ayuda-callbacks', label: 'Callbacks' },
   { id: 'ayuda-senales', label: 'Senales complejas' },
@@ -38,10 +42,33 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 const hookBodyExample = `{
-  "idTrigger": "<id del trigger>",
+  "idWebhook": "<id del webhook del trigger>",
   "price": {{close}},
-  "metadatos": { "ticker": "{{ticker}}", "interval": "{{interval}}" }
+  "metadatos": { "ticker": "{{ticker}}", "interval": "{{interval}}" },
+  "stopLoss": [{ "price": 65000, "probability": 0.3 }],
+  "takeProfit": [{ "price": 72000, "probability": 0.5 }]
 }`;
+
+const cancelBodyExample = `{
+  "idWebhook": "<id del webhook del trigger>",
+  "price": {{close}},
+  "idCancel": "<id de la razon de cancelacion>"
+}`;
+
+// Enlace a otra seccion de la ayuda (el hash lo usa la navegacion, asi que hace scroll)
+function SectionLink({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <a
+      href="#/ayuda"
+      onClick={(event) => {
+        event.preventDefault();
+        scrollToSection(id);
+      }}
+    >
+      {children}
+    </a>
+  );
+}
 
 export function HelpPage() {
   return (
@@ -85,7 +112,8 @@ export function HelpPage() {
         <p>
           La idea: el trigger dice <em>cuando mirar</em> (precio y analisis tecnico) y las condiciones dicen{' '}
           <em>si el contexto acompana</em> (macro, sentimiento, interes, opciones…). Una oportunidad solo pasa a{' '}
-          <strong>Activa</strong> cuando ambas cosas coinciden antes de que se acabe el tiempo.
+          <strong>Activa</strong> cuando ambas cosas coinciden antes de que se acabe el tiempo, y se cierra sola al
+          vencer (<strong>Finalizada</strong>) o antes con una alerta de cancelacion (<strong>Cancelada</strong>).
         </p>
       </Section>
 
@@ -128,20 +156,32 @@ export function HelpPage() {
                 <td>
                   <StatusBadge tag={OpportunityStatusTag.Expired} label="Expirada" />
                 </td>
-                <td>Seguia En Curso cuando paso su fecha de expiracion. Es un estado final.</td>
+                <td>
+                  Seguia En Curso cuando paso su fecha de expiracion: las condiciones no se cumplieron a tiempo. Es un
+                  estado final.
+                </td>
                 <td>—</td>
               </tr>
               <tr>
                 <td>
-                  <StatusBadge tag={OpportunityStatusTag.Finished} label="Finalizada" />{' '}
+                  <StatusBadge tag={OpportunityStatusTag.Finished} label="Finalizada" />
+                </td>
+                <td>Seguia Activa cuando paso su fecha de expiracion (cronjob, cada minuto). Es un estado final.</td>
+                <td>
+                  <strong>Cierre</strong>: precio de mercado del asset al finalizar (si no se pudo obtener, queda vacio).
+                </td>
+              </tr>
+              <tr>
+                <td>
                   <StatusBadge tag={OpportunityStatusTag.Canceled} label="Cancelada" />
                 </td>
                 <td>
-                  Cierre de una oportunidad Activa. Existen en el catalogo, pero C-TRD todavia no tiene un proceso que las
-                  asigne automaticamente.
+                  Llega una alerta del trigger con <code>idCancel</code> mientras la oportunidad esta En Curso o Activa.
+                  Guarda tambien el motivo. Es un estado final (ver <SectionLink id="ayuda-cancelar">Cancelar</SectionLink>
+                  ).
                 </td>
                 <td>
-                  <strong>Cierre</strong>: precio al finalizar o cancelar.
+                  <strong>Cierre</strong>: el <code>price</code> que envio TradingView en la alerta de cancelacion.
                 </td>
               </tr>
             </tbody>
@@ -152,19 +192,22 @@ export function HelpPage() {
         <ul className="help-list">
           <li>
             El cronjob corre <strong>cada minuto</strong>: evalua las condiciones que tocan, copia su estado a las
-            oportunidades En Curso, activa las que tienen todo en verde y expira las vencidas.
+            oportunidades En Curso, activa las que tienen todo en verde, expira las En Curso vencidas y finaliza las
+            Activas vencidas.
           </li>
           <li>
             <strong>Expiracion = maximo de velas × duracion de la vela del trigger</strong>, contado desde la alerta. Ej:
-            5 velas de 4 horas = 20 h para que se cumplan las condiciones.
+            5 velas de 4 horas = 20 h. Es a la vez el plazo para que se cumplan las condiciones y la vida maxima de la
+            oportunidad: no se alarga al activarse, asi que una que se activa tarde queda Activa menos tiempo.
           </li>
           <li>
             Solo hay <strong>una oportunidad viva por trigger</strong>: si ya tiene una En Curso o Activa, una nueva alerta
-            no crea otra (C-TRD responde con el id de la existente).
+            no crea otra (C-TRD responde con el id de la existente). Cuando se cierra (Expirada, Finalizada o
+            Cancelada), la siguiente alerta abre una nueva.
           </li>
           <li>
-            Una oportunidad Activa <strong>no vuelve atras</strong> aunque despues una condicion se desactive, y no
-            expira.
+            Una oportunidad Activa <strong>no vuelve atras</strong> aunque despues una condicion se desactive: sigue
+            Activa hasta que vence (Finalizada) o se cancela.
           </li>
           <li>
             La oportunidad guarda una <strong>copia</strong> de los datos del trigger al nacer: editar el trigger no
@@ -191,12 +234,19 @@ export function HelpPage() {
         </dl>
         <ul className="help-list">
           <li>
-            <code>idTrigger</code> y <code>price</code> (mayor a 0) son obligatorios. <code>metadatos</code> es un objeto
-            libre que se guarda en la oportunidad.
+            <code>idWebhook</code> y <code>price</code> (mayor a 0) son obligatorios. El <code>idWebhook</code> se
+            muestra al crear o editar el trigger (no aparece en el listado). <code>metadatos</code> es un objeto libre
+            que se guarda en la oportunidad.
           </li>
           <li>
-            <strong>Editar un trigger crea una version nueva con otro id</strong> y deja la anterior inactiva: hay que
-            cambiar el <code>idTrigger</code> en la alerta o C-TRD la rechaza. El historial se ve en{' '}
+            <code>stopLoss</code> y <code>takeProfit</code> son opcionales: listas de objetivos con <code>price</code>{' '}
+            (mayor a 0) y <code>probability</code> opcional. Solo se guardan cuando la alerta crea la oportunidad; si ya
+            habia una viva, se ignoran.
+          </li>
+          <li>
+            <strong>Editar un trigger crea una version nueva con otro id</strong> y deja la anterior inactiva, pero
+            conserva el <code>idWebhook</code>: la alerta no cambia y C-TRD la asigna a la version vigente. El historial
+            se ve en{' '}
             <a href="#/triggers">Triggers</a> → detalle → <em>Mostrar detalle de versiones</em>.
           </li>
           <li>
@@ -204,6 +254,40 @@ export function HelpPage() {
             anterior tenga una En Curso.
           </li>
         </ul>
+      </Section>
+
+      <Section id="ayuda-cancelar" title="Cancelar una oportunidad">
+        <p>
+          Una oportunidad En Curso o Activa se cancela con otra alerta de TradingView al mismo webhook, con el id del
+          webhook del trigger y una <strong>razon de cancelacion</strong> en <code>idCancel</code>. Sirve, por ejemplo, para una
+          alerta de invalidacion de la senal (perdida de un nivel, cruce contrario…).
+        </p>
+        <dl className="kv kv--wide">
+          <dt>Webhook</dt>
+          <dd>
+            <code>POST {apiBaseUrl}/hook/trading_view</code>
+          </dd>
+          <dt>Mensaje</dt>
+          <dd>
+            <pre className="code-block">{cancelBodyExample}</pre>
+          </dd>
+        </dl>
+        <ul className="help-list">
+          <li>
+            La oportunidad pasa a <strong>Cancelada</strong> de inmediato y guarda el <code>price</code> como precio de
+            cierre y el motivo, que se ve en el detalle de la oportunidad.
+          </li>
+          <li>
+            Con <code>idCancel</code> la alerta nunca crea una oportunidad: si el trigger no tiene una En Curso o Activa,
+            C-TRD rechaza la alerta.
+          </li>
+          <li>
+            Cancela la oportunidad viva <strong>de la version vigente</strong> del trigger: una oportunidad abierta por
+            una version anterior (antes de editarlo) ya no se puede cancelar con la alerta.
+          </li>
+        </ul>
+        <h3>Razones de cancelacion disponibles</h3>
+        <CancelReasonCatalog />
       </Section>
 
       <Section id="ayuda-condiciones" title="Que es una condicion">
@@ -216,10 +300,16 @@ export function HelpPage() {
             parametros (serie, mercado, asset…).
           </li>
           <li>
-            <strong>Un callback</strong> que lee la respuesta y contesta si o no.
+            <strong>Un callback</strong> que lee la respuesta y contesta si o no. Algunos callbacks aceptan{' '}
+            <strong>parametros</strong> (ej: un umbral) que se fijan al crear la condicion; si no se envian se usa su
+            valor por defecto.
           </li>
           <li>
             <strong>Un intervalo</strong> (minimo 60 s): cada cuanto se vuelve a preguntar.
+          </li>
+          <li>
+            <strong>Un tag unico, un nombre y un tipo</strong> (catalogo de tipos de condicion: macro, politica
+            monetaria, sentimiento…) para identificarla y clasificarla.
           </li>
         </ul>
         <p>Como se comporta:</p>
@@ -371,8 +461,18 @@ export function HelpPage() {
             Revisa en <a href="#/condiciones">Condiciones</a> el estado y la ultima evaluacion de cada una. Si la API
             falla, el estado no cambia. Si vencio la ventana, queda Expirada aunque luego se cumplan.
           </dd>
-          <dt>La oportunidad Activa no tiene precio de activacion</dt>
-          <dd>No se pudo consultar el precio de mercado del asset en ese ciclo; la activacion no se bloquea por eso.</dd>
+          <dt>La oportunidad Activa no tiene precio de activacion, o la Finalizada no tiene precio de cierre</dt>
+          <dd>
+            No se pudo consultar el precio de mercado del asset en ese ciclo; la activacion o el cierre no se bloquean por
+            eso.
+          </dd>
+          <dt>La alerta de cancelacion es rechazada</dt>
+          <dd>
+            "La razon de cancelacion enviada no existe": el <code>idCancel</code> no es una de las razones de{' '}
+            <SectionLink id="ayuda-cancelar">Cancelar</SectionLink>. "El trigger no tiene una oportunidad en curso o
+            activa para cancelar": ya se cerro (vencio o se cancelo antes) o la alerta usa el id de una version vieja del
+            trigger.
+          </dd>
           <dt>La condicion de Google Trends no cambia</dt>
           <dd>
             Lee el ultimo CSV subido para el asset. Sube uno nuevo en <a href="#/google-trends">Google Trends</a> para
@@ -484,7 +584,21 @@ function CallbackCatalog() {
                       <code>{callback.id}</code>
                     </div>
                   </td>
-                  <td>{callback.description}</td>
+                  <td>
+                    {callback.description}
+                    {callback.parameters.length > 0 && (
+                      <div className="muted small">
+                        Parametros:{' '}
+                        {callback.parameters.map((parameter, paramIndex) => (
+                          <span key={parameter.name}>
+                            {paramIndex > 0 && ', '}
+                            <code>{parameter.name}</code>
+                            {parameter.defaultValue !== null && ` (por defecto ${parameter.defaultValue})`}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))
             ),
@@ -495,14 +609,15 @@ function CallbackCatalog() {
   );
 }
 
-// Diagrama de estados. Las flechas punteadas son transiciones que C-TRD todavia no hace solo
+// Diagrama de estados
 function LifecycleDiagram() {
   return (
     <div className="help-diagram">
-      <svg viewBox="0 0 880 290" role="img" aria-labelledby="ciclo-svg-title">
+      <svg viewBox="0 0 880 320" role="img" aria-labelledby="ciclo-svg-title">
         <title id="ciclo-svg-title">
           La alerta crea la oportunidad En Curso (con condiciones) o Activa (sin condiciones). En Curso pasa a Activa
-          cuando se cumplen todas las condiciones o a Expirada si vence. Activa termina en Finalizada o Cancelada.
+          cuando se cumplen todas las condiciones o a Expirada si vence. Activa pasa a Finalizada cuando vence. En Curso
+          y Activa pasan a Cancelada con una alerta de cancelacion.
         </title>
         <defs>
           <marker id="ciclo-flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
@@ -514,9 +629,10 @@ function LifecycleDiagram() {
           <path d="M140 150 H228" />
           <path d="M380 150 H518" />
           <path d="M305 122 V68" />
-          <path d="M75 178 V262 H595 V180" />
-          <path d="M670 138 L728 76" className="help-diagram__pending" />
-          <path d="M670 162 L728 220" className="help-diagram__pending" />
+          <path d="M75 178 V300 H640 V180" />
+          <path d="M670 150 H728" />
+          <path d="M330 178 L418 228" />
+          <path d="M590 178 L502 228" />
         </g>
 
         <g className="help-diagram__labels">
@@ -532,7 +648,10 @@ function LifecycleDiagram() {
           <text x="315" y="100">
             vence: velas × temporalidad
           </text>
-          <text x="335" y="254" textAnchor="middle">
+          <text x="699" y="140" textAnchor="middle">
+            vence
+          </text>
+          <text x="200" y="292" textAnchor="middle">
             sin condiciones: nace Activa
           </text>
         </g>
@@ -541,9 +660,46 @@ function LifecycleDiagram() {
         <DiagramNode x={230} y={122} width={150} title="En Curso" subtitle="espera condiciones" status={OpportunityStatusTag.Ongoing} />
         <DiagramNode x={230} y={10} width={150} title="Expirada" subtitle="estado final" status={OpportunityStatusTag.Expired} />
         <DiagramNode x={520} y={122} width={150} title="Activa" subtitle="senal confirmada" status={OpportunityStatusTag.Active} />
-        <DiagramNode x={730} y={40} width={140} title="Finalizada" subtitle="pendiente en C-TRD" status={OpportunityStatusTag.Finished} />
-        <DiagramNode x={730} y={192} width={140} title="Cancelada" subtitle="pendiente en C-TRD" status={OpportunityStatusTag.Canceled} />
+        <DiagramNode x={730} y={122} width={140} title="Finalizada" subtitle="estado final" status={OpportunityStatusTag.Finished} />
+        <DiagramNode x={385} y={230} width={150} title="Cancelada" subtitle="alerta con idCancel" status={OpportunityStatusTag.Canceled} />
       </svg>
+    </div>
+  );
+}
+
+// Catalogo real de razones de cancelacion: el id es lo que va en idCancel
+function CancelReasonCatalog() {
+  const reasons = useApiQuery((signal) => listCatalogs(CatalogType.CancelReason, signal), []);
+
+  if (reasons.error) return <ErrorBanner error={reasons.error} onRetry={reasons.refetch} stale={!!reasons.data} />;
+  if (reasons.isLoading || !reasons.data) return <p className="empty">Cargando razones de cancelacion…</p>;
+  if (reasons.data.catalogs.length === 0) return <p className="empty">No hay razones de cancelacion en C-TRD.</p>;
+
+  return (
+    <div className="table-wrap">
+      <table className="table help-table">
+        <thead>
+          <tr>
+            <th scope="col">Razon</th>
+            <th scope="col">idCancel</th>
+            <th scope="col">Descripcion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reasons.data.catalogs.map((reason) => (
+            <tr key={reason.id}>
+              <td>
+                <strong>{reason.name}</strong>
+                <div className="muted small">{reason.tag}</div>
+              </td>
+              <td>
+                <code>{reason.id}</code>
+              </td>
+              <td>{reason.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

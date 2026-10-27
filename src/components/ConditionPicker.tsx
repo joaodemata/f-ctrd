@@ -9,7 +9,7 @@ import { StatusBadge } from './StatusBadge';
 const PICKER_LIMIT = 20;
 
 // Lo minimo para mostrar una condicion elegida: al editar un trigger solo se conoce su id y nombre
-export type ConditionOption = Pick<Condition, 'id' | 'nameCondition'>;
+export type ConditionOption = Pick<Condition, 'id' | 'name'>;
 
 interface ConditionPickerProps {
   value: ConditionOption[];
@@ -43,11 +43,11 @@ export function ConditionPicker({ value, onChange, disabled = false }: Condition
         <ol className="chips" aria-label="Condiciones elegidas">
           {value.map((condition) => (
             <li key={condition.id} className="chip">
-              <span>{condition.nameCondition}</span>
+              <span>{condition.name}</span>
               <button
                 type="button"
                 className="chip__remove"
-                aria-label={`Quitar ${condition.nameCondition}`}
+                aria-label={`Quitar ${condition.name}`}
                 onClick={() => toggle(condition)}
                 disabled={disabled}
               >
@@ -60,7 +60,7 @@ export function ConditionPicker({ value, onChange, disabled = false }: Condition
 
       <input
         type="search"
-        placeholder="Buscar por nombre, descripcion, proveedor o callback"
+        placeholder="Buscar por tag, nombre, descripcion, tipo, proveedor o callback"
         value={search}
         maxLength={100}
         onChange={(event) => setSearch(event.target.value)}
@@ -87,13 +87,16 @@ export function ConditionPicker({ value, onChange, disabled = false }: Condition
                 disabled={disabled}
               />
               <span>
-                <strong>{condition.nameCondition}</strong>
-                <span className="muted small"> · {condition.nameProvider} · {condition.callbackFunction}</span>
-                {condition.descriptionCondition && (
-                  <span className="muted small option-list__description">{condition.descriptionCondition}</span>
+                <strong>{condition.name}</strong>
+                <span className="muted small">
+                  {condition.nameTypeCondition && ` · ${condition.nameTypeCondition}`} · {condition.nameProvider} ·{' '}
+                  {condition.callbackFunction}
+                </span>
+                {condition.description && (
+                  <span className="muted small option-list__description">{condition.description}</span>
                 )}
               </span>
-              <StatusBadge tag={condition.tag_status} label={condition.status || condition.tag_status} />
+              <StatusBadge tag={condition.tagStatus} label={condition.status || condition.tagStatus} />
             </label>
           ))
         )}
