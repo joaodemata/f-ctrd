@@ -1,5 +1,6 @@
 import { Fragment, useState } from 'react';
 import { previousTriggerId, type Trigger } from '../models/trigger';
+import { visibilityLabel } from '../models/visibility';
 import { formatDateTime } from '../utils/format';
 import { StatusBadge } from './StatusBadge';
 import { TriggerDetail } from './TriggerDetail';
@@ -55,6 +56,7 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
                     <div className="muted small">
                       {trigger.tag}
                       {previousTriggerId(trigger) && ' · actualizado'}
+                      {` · ${visibilityLabel(trigger)}`}
                     </div>
                   </td>
                   <td>{trigger.asset || trigger.tagAsset}</td>

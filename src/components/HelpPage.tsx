@@ -14,12 +14,14 @@ import { StatusBadge } from './StatusBadge';
 
 // Ayuda funcional de C-TRD. Lo que se explica aqui sale del codigo de C-TRD (controllers/hook.controller.go,
 // data_validates/hook_data_validate.go, data_validates/operation_data_validate.go, cronjobs/check_conditions.go,
-// cronjobs/check_opportunities.go, providers/callbacks.go); si cambia alli, revisar
+// cronjobs/check_opportunities.go, providers/callbacks.go, models/catalogs_model.go -> VisibleToUserFilter); si cambia
+// alli, revisar
 
 const SECTIONS = [
   { id: 'ayuda-resumen', label: 'Como encaja todo' },
   { id: 'ayuda-ciclo', label: 'Ciclo de vida' },
   { id: 'ayuda-triggers', label: 'Triggers y alertas' },
+  { id: 'ayuda-visibilidad', label: 'Usuarios y visibilidad' },
   { id: 'ayuda-cancelar', label: 'Cancelar' },
   { id: 'ayuda-condiciones', label: 'Condiciones' },
   { id: 'ayuda-callbacks', label: 'Callbacks' },
@@ -257,6 +259,37 @@ export function HelpPage() {
         </ul>
       </Section>
 
+      <Section id="ayuda-visibilidad" title="Usuarios y visibilidad">
+        <p>
+          La sesion es opcional. Solo el <strong>super usuario</strong> crea y edita triggers, crea condiciones y sube
+          los CSV de Google Trends. Cada trigger y condicion guarda el usuario que lo creo y una{' '}
+          <strong>visibilidad</strong> que decide quien ve sus oportunidades:
+        </p>
+        <dl className="kv kv--wide">
+          <dt>Privado</dt>
+          <dd>Solo el usuario que lo creo.</dd>
+          <dt>Publico</dt>
+          <dd>Todos, tambien quienes entran sin sesion.</dd>
+          <dt>Lista privada</dt>
+          <dd>El usuario que lo creo y los usuarios de la lista (ids de usuarios activos).</dd>
+        </dl>
+        <ul className="help-list">
+          <li>
+            Sin sesion, <a href="#/">Oportunidades</a> muestra solo las publicas. Con sesion muestra tambien las tuyas y
+            las de las listas privadas donde estas. Los totales por estado cuentan solo las que puedes ver.
+          </li>
+          <li>
+            La oportunidad copia el usuario y la visibilidad del trigger cuando nace. La visibilidad se elige al crear el
+            trigger; editarlo crea una version nueva con el mismo usuario y la misma visibilidad.
+          </li>
+          <li>
+            Los triggers y oportunidades creados antes de los usuarios no tienen visibilidad: esas oportunidades no las
+            ve nadie, y las nuevas de esos triggers tampoco.
+          </li>
+          <li>Hoy solo las oportunidades se filtran por visibilidad; los listados de triggers y condiciones muestran todo.</li>
+        </ul>
+      </Section>
+
       <Section id="ayuda-cancelar" title="Cancelar una oportunidad">
         <p>
           Una oportunidad En Curso o Activa se cancela con otra alerta de TradingView al mismo webhook, con el id del
@@ -455,7 +488,9 @@ export function HelpPage() {
           <dt>La alerta llega pero no aparece una oportunidad nueva</dt>
           <dd>
             El trigger ya tiene una oportunidad En Curso o Activa: C-TRD devuelve esa. Si el error es "El trigger enviado
-            no existe", el trigger se edito y la alerta sigue usando el id viejo.
+            no existe", el trigger se edito y la alerta sigue usando el id viejo. Si la oportunidad se creo pero no se
+            ve, revisa la <SectionLink id="ayuda-visibilidad">visibilidad</SectionLink> del trigger y con que usuario
+            iniciaste sesion.
           </dd>
           <dt>La oportunidad no pasa a Activa</dt>
           <dd>

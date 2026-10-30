@@ -1,6 +1,7 @@
 import { updateTrigger } from '../api/triggers';
 import { useApiMutation } from '../hooks/useApiMutation';
 import type { Trigger } from '../models/trigger';
+import { visibilityLabel } from '../models/visibility';
 import { TradingViewHookInfo } from './TradingViewHookInfo';
 import { TriggerForm, triggerFormValues } from './TriggerForm';
 
@@ -45,7 +46,7 @@ export function TriggerEdit({ trigger, onClose }: TriggerEditProps) {
   return (
     <TriggerForm
       initialValues={triggerFormValues(trigger)}
-      onSubmit={(body) => void mutation.run({ ...body, idTrigger: trigger.id })}
+      onSubmit={(fields) => void mutation.run({ ...fields, idTrigger: trigger.id })}
       isPending={mutation.isPending}
       error={mutation.error}
       submitLabel="Guardar cambios"
@@ -54,8 +55,9 @@ export function TriggerEdit({ trigger, onClose }: TriggerEditProps) {
       onCancel={() => onClose(false)}
       notice={
         <p className="notice">
-          Al guardar, C-TRD crea una nueva version del trigger con <strong>otro ID</strong> y deja inactiva la actual:
-          la alerta de TradingView debe pasar a usar el ID nuevo.
+          Al guardar, C-TRD crea una nueva version del trigger con <strong>otro ID</strong> y deja inactiva la actual.
+          La version nueva conserva el ID del webhook, el usuario y la visibilidad, que no se pueden cambiar aqui
+          (visibilidad actual: <strong>{visibilityLabel(trigger)}</strong>).
         </p>
       }
     />

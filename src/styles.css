@@ -240,6 +240,33 @@ p {
   margin-left: auto;
 }
 
+/* Sesion */
+
+.session-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.session-menu__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.session-menu__badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
 /* Navbar */
 
 .navbar {
@@ -928,6 +955,12 @@ a {
 .kv dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
+}
+
+/* Un usuario de la lista privada por linea; los ids no caben en columnas angostas */
+.record-access__user {
+  display: block;
+  overflow-wrap: anywhere;
 }
 
 .plain-list {

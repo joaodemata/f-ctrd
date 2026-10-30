@@ -3,6 +3,7 @@ import { pollIntervalMs } from '../api/config';
 import { listOpportunities } from '../api/opportunities';
 import type { ApiMeta, ApiResult } from '../api/types';
 import { useApiQuery } from '../hooks/useApiQuery';
+import { useAuth } from '../hooks/useAuth';
 import { OPPORTUNITY_STATUSES, type OpportunityStatusInfo } from '../models/opportunity';
 import { escapeRegex } from '../utils/format';
 import { ErrorBanner } from './ErrorBanner';
@@ -29,9 +30,15 @@ export function Dashboard() {
   // por estado usa el nombre del estado y tiene prioridad sobre el texto libre
   const search = status ? `^${escapeRegex(status.name)}$` : escapeRegex(filters.search.trim());
 
+  // C-TRD filtra por visibilidad segun la sesion: sin sesion solo las publicas; con sesion tambien las del usuario y
+  // las de lista privada donde esta. Al iniciar o cerrar sesion se vuelve a pedir; el estado cuenta porque un token
+  // vencido falla la primera consulta (401) y la sesion pasa de 'checking' a 'anonymous' sin haber tenido usuario
+  const auth = useAuth();
+  const sessionKey = auth.user?.id ?? auth.status;
+
   const list = useApiQuery(
     (signal) => listOpportunities({ limit, page, search, ...dateRange }, signal),
-    [limit, page, search, dateRange.startDate, dateRange.endDate],
+    [limit, page, search, dateRange.startDate, dateRange.endDate, sessionKey],
     { pollIntervalMs },
   );
 
@@ -53,7 +60,7 @@ export function Dashboard() {
       }
       return { ok: true, data: totals, meta };
     },
-    [dateRange.startDate, dateRange.endDate],
+    [dateRange.startDate, dateRange.endDate, sessionKey],
     { pollIntervalMs },
   );
 
@@ -87,6 +94,12 @@ export function Dashboard() {
             {pollIntervalMs > 0 && ` · refresco cada ${Math.round(pollIntervalMs / 1000)}s`}
           </p>
           <p className="muted small">Todos los precios estan expresados en USD.</p>
+          {auth.status === 'anonymous' && (
+            <p className="muted small">
+              Sin sesion solo ves las oportunidades publicas. <a href="#/login">Inicia sesion</a> para ver tambien las
+              tuyas y las compartidas contigo.
+            </p>
+          )}
         </div>
         <button type="button" className="button" onClick={refreshAll} disabled={list.isLoading || list.isRefreshing}>
           {list.isRefreshing ? 'Actualizando…' : 'Actualizar'}

@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { ApiResult } from './types';
+import type { ApiResult, VisibilityBody } from './types';
 import type { Condition } from '../models/condition';
 
 // Query params de GET /list/conditions (format_validates/list_format_validate.go -> ListSearchFormat)
@@ -24,8 +24,9 @@ export function listConditions(
 
 // Body de POST /operation/create/condition (format_validates/operation_format_validate.go -> CreateConditionFormat).
 // Los valores de los parametros van como texto; C-TRD los valida contra el dataType de la API (parameters) o del
-// callback (parametersCallback). El tag es unico entre las condiciones no borradas (DVOPR020)
-export interface CreateConditionBody {
+// callback (parametersCallback). El tag es unico entre las condiciones no borradas (DVOPR020). La condicion queda a
+// nombre del usuario de la sesion (solo super usuario) con la visibilidad enviada
+export interface CreateConditionBody extends VisibilityBody {
   tag: string;
   name: string;
   description: string;

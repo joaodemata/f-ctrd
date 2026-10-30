@@ -18,6 +18,8 @@ export const CatalogType = {
   CandleStick: 'TYPE_CANDLE_STICK',
   CancelReason: 'CANCEL_REASON',
   Condition: 'TYPE_CONDITION',
+  UserPrivileges: 'USER_PRIVILEGES',
+  Visibility: 'TYPE_VISIBILITY',
 } as const;
 
 export type CatalogType = (typeof CatalogType)[keyof typeof CatalogType];

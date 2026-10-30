@@ -1,8 +1,11 @@
 import type { ObjectId } from './opportunity';
+import type { RecordOwner } from './user';
+import type { RecordVisibility } from './visibility';
 
 // Espejo de models/conditions_model.go en C-TRD. Tags json en camelCase. C-TRD no envia la peticion (httpRequest)
-// ni la metadata, y GET /list/conditions no proyecta el lock del cronjob
-export interface Condition {
+// ni la metadata, y GET /list/conditions no proyecta el lock del cronjob. Tampoco proyecta el usuario ni la
+// visibilidad: llegan con el valor cero (id cero, textos vacios, allowedUsers null), ver hasVisibility
+export interface Condition extends RecordOwner, RecordVisibility {
   id: ObjectId;
   tag: string;
   name: string;
