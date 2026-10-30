@@ -1,4 +1,6 @@
-import type { ObjectId } from './opportunity';
+import { isSetObjectId, type ObjectId } from './opportunity';
+import type { RecordOwner } from './user';
+import type { RecordVisibility } from './visibility';
 
 // Espejo de models/triggers_model.go en C-TRD (tags json en camelCase). GET /list/triggers no retorna los campos de
 // auditoria (logical_delete, core_db, ...)
@@ -10,7 +12,8 @@ export interface TriggerCondition {
   descriptionCondition: string;
 }
 
-export interface Trigger {
+// Usuario que lo creo y visibilidad (RecordOwnerData / RecordVisibilityData inline); al actualizarlo se conservan
+export interface Trigger extends RecordOwner, RecordVisibility {
   id: ObjectId;
   tag: string;
   name: string;
@@ -43,13 +46,6 @@ export const TriggerStatusTag = {
   Active: 'STATUS-ACTIVE',
   Inactive: 'STATUS-INACTIVE',
 } as const;
-
-// ObjectID cero de Go: algunos triggers antiguos lo guardaron en lugar de null
-const ZERO_OBJECT_ID = '000000000000000000000000';
-
-function isSetObjectId(id: ObjectId | null): id is ObjectId {
-  return !!id && id !== ZERO_OBJECT_ID;
-}
 
 // Id de la version anterior, o null si es la version original
 export function previousTriggerId(trigger: Trigger): ObjectId | null {

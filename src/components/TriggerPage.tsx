@@ -51,7 +51,10 @@ export function TriggerPage() {
       <TriggerForm
         key={formKey}
         initialValues={EMPTY_TRIGGER_FORM}
-        onSubmit={(body) => void mutation.run(body)}
+        withVisibility
+        onSubmit={(fields, visibility) => {
+          if (visibility) void mutation.run({ ...fields, ...visibility });
+        }}
         isPending={mutation.isPending}
         error={mutation.error}
         submitLabel="Crear trigger"

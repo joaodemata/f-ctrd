@@ -2,6 +2,7 @@ import { TIMEFRAME_MINUTES } from '../models/catalog';
 import { previousTriggerId, triggerRootId, TriggerStatusTag, type Trigger } from '../models/trigger';
 import { formatDateTime, formatDuration } from '../utils/format';
 import { CopyButton } from './CopyButton';
+import { RecordAccess } from './RecordAccess';
 
 interface TriggerDetailProps {
   trigger: Trigger;
@@ -58,6 +59,7 @@ export function TriggerDetail({ trigger, onEdit }: TriggerDetailProps) {
             <p className="muted">Version original, nunca se actualizo.</p>
           )}
         </div>
+        <RecordAccess record={trigger} />
       </div>
 
       <h4>Condiciones ({conditions.length})</h4>

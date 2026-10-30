@@ -1,5 +1,6 @@
 import { apiBaseUrl, DEFAULT_TIMEOUT_MS } from './config';
 import { ApiError, FrontendTracking, apiErrorFromException, apiErrorFromResponse } from './errors';
+import { clearSession, getSessionToken, isInvalidSessionTracking } from './session';
 import type { ApiResponse, ApiResult, HttpMethod, QueryParams, QueryValue, RequestOptions } from './types';
 
 // FormatValidateMiddleware acepta fechas en query como YYYY-MM-DD o RFC3339
@@ -49,10 +50,16 @@ export async function request<T>(method: HttpMethod, path: string, options: Requ
     // Un FormData se envia como multipart/form-data: el navegador arma el Content-Type con el boundary
     const isFormData = requestBody instanceof FormData;
     const isJson = requestBody !== undefined && !isFormData;
+    // Con sesion iniciada el token va en todas las peticiones; las rutas publicas lo ignoran
+    const token = getSessionToken();
     const response = await fetch(buildUrl(path, options.query), {
       method,
       signal: controller.signal,
-      headers: { Accept: 'application/json', ...(isJson ? { 'Content-Type': 'application/json' } : {}) },
+      headers: {
+        Accept: 'application/json',
+        ...(isJson ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: isFormData ? requestBody : isJson ? JSON.stringify(requestBody) : undefined,
     });
 
@@ -74,6 +81,8 @@ export async function request<T>(method: HttpMethod, path: string, options: Requ
     }
 
     if (!response.ok || body.status !== 'SUCCESS') {
+      // La sesion vencio o el usuario ya no esta disponible: se olvida el token (solo si es el mismo que se envio)
+      if (token && token === getSessionToken() && isInvalidSessionTracking(body.tracking)) clearSession();
       return { ok: false, error: apiErrorFromResponse(response.status, body) };
     }
 

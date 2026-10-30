@@ -1,7 +1,18 @@
+import type { RecordOwner } from './user';
+import type { RecordVisibility } from './visibility';
+
 // Espejo de models/opportunities_model.go en C-TRD (tags json). Los ObjectID llegan como
 // string y los time.Time como string RFC3339 en UTC.
 
 export type ObjectId = string;
+
+// ObjectID cero de Go: algunos registros antiguos lo guardaron en lugar de null, y es lo que llega en un campo
+// que el registro no tiene (por ejemplo el usuario de los registros anteriores a los usuarios)
+const ZERO_OBJECT_ID = '000000000000000000000000';
+
+export function isSetObjectId(id: ObjectId | null | undefined): id is ObjectId {
+  return !!id && id !== ZERO_OBJECT_ID;
+}
 
 export const OpportunityStatusTag = {
   Ongoing: 'OPPORTUNITY-ONGOING',
@@ -50,7 +61,8 @@ export interface OpportunityCondition {
   status: string;
 }
 
-export interface Opportunity {
+// Usuario y visibilidad copiados del trigger que la creo (RecordOwnerData / RecordVisibilityData inline)
+export interface Opportunity extends RecordOwner, RecordVisibility {
   id: ObjectId;
   idTrigger: ObjectId;
   tagTrigger: string;

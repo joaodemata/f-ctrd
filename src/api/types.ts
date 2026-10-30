@@ -33,6 +33,13 @@ export interface RequestOptions {
   timeoutMs?: number;
 }
 
+// Visibilidad en el body de crear trigger y crear condicion (format_validates -> VisibilityFormat).
+// allowedUsers solo va con la lista blanca, que necesita al menos un usuario activo (DVOPR023 si alguno no lo es)
+export interface VisibilityBody {
+  idTypeVisibility: string; // catalogo TYPE_VISIBILITY
+  allowedUsers?: string[]; // ids sin repetir
+}
+
 // Datos de la envoltura de una respuesta exitosa
 export interface ApiMeta {
   httpStatus: number;

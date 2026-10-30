@@ -19,6 +19,15 @@ import { ConditionsTable } from './ConditionsTable';
 import { CopyButton } from './CopyButton';
 import { ErrorBanner } from './ErrorBanner';
 import { FormField } from './FormField';
+import {
+  EMPTY_VISIBILITY_FORM,
+  VisibilityFields,
+  validateVisibility,
+  visibilityBody,
+  visibilityServerErrors,
+  type VisibilityFieldErrors,
+  type VisibilityFormValues,
+} from './VisibilityFields';
 
 // C-TRD limita el listado de APIs a 100 por pagina; hoy hay pocas y caben en un select
 const API_LIMIT = 100;
@@ -40,6 +49,7 @@ interface ConditionFormValues {
   callback: CallbackInfo | null;
   parametersCallback: Record<string, string>;
   intervalSeconds: string;
+  visibility: VisibilityFormValues;
 }
 
 const EMPTY_FORM: ConditionFormValues = {
@@ -52,6 +62,7 @@ const EMPTY_FORM: ConditionFormValues = {
   callback: null,
   parametersCallback: {},
   intervalSeconds: '3600',
+  visibility: EMPTY_VISIBILITY_FORM,
 };
 
 type FieldErrors = Partial<Record<keyof CreateConditionBody, string>>;
@@ -118,6 +129,7 @@ export function ConditionPage() {
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
   const [parameterErrors, setParameterErrors] = useState<Record<string, string>>({});
   const [callbackParameterErrors, setCallbackParameterErrors] = useState<Record<string, string>>({});
+  const [visibilityErrors, setVisibilityErrors] = useState<VisibilityFieldErrors>({});
   // Cambia al crear o limpiar: remonta los parametros (estado interno del selector de assets) y refresca el listado
   const [formKey, setFormKey] = useState(0);
   const mutation = useApiMutation(createCondition);
@@ -157,6 +169,7 @@ export function ConditionPage() {
     setClientErrors({});
     setParameterErrors({});
     setCallbackParameterErrors({});
+    setVisibilityErrors({});
     setFormKey((key) => key + 1);
   };
 
@@ -178,17 +191,20 @@ export function ConditionPage() {
 
     const nextParameterErrors = validateParameters(api?.parameters ?? [], values.parameters);
     const nextCallbackParameterErrors = validateParameters(callback?.parameters ?? [], values.parametersCallback);
+    const nextVisibilityErrors = validateVisibility(values.visibility);
 
     setClientErrors(errors);
     setParameterErrors(nextParameterErrors);
     setCallbackParameterErrors(nextCallbackParameterErrors);
+    setVisibilityErrors(nextVisibilityErrors);
     if (
       !api ||
       !callback ||
       !typeCondition ||
       Object.keys(errors).length > 0 ||
       Object.keys(nextParameterErrors).length > 0 ||
-      Object.keys(nextCallbackParameterErrors).length > 0
+      Object.keys(nextCallbackParameterErrors).length > 0 ||
+      Object.keys(nextVisibilityErrors).length > 0
     ) {
       return;
     }
@@ -203,6 +219,7 @@ export function ConditionPage() {
       callbackFunction: callback.id,
       parametersCallback: filledParameters(values.parametersCallback),
       intervalSeconds: interval,
+      ...visibilityBody(values.visibility),
     });
     if (result.ok) resetForm();
   };
@@ -376,6 +393,12 @@ export function ConditionPage() {
             ))}
           </span>
         </FormField>
+
+        <VisibilityFields
+          values={values.visibility}
+          onChange={(visibility) => set('visibility', visibility)}
+          errors={{ ...visibilityServerErrors(mutation.error), ...visibilityErrors }}
+        />
 
         {mutation.error && <ErrorBanner error={mutation.error} />}
 

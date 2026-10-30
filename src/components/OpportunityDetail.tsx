@@ -1,5 +1,6 @@
 import type { Opportunity, RiskManagement } from '../models/opportunity';
 import { formatDateTime, formatPrice, formatProbability } from '../utils/format';
+import { RecordAccess } from './RecordAccess';
 import { StatusBadge } from './StatusBadge';
 
 function RiskList({ title, items }: { title: string; items: RiskManagement[] | null }) {
@@ -60,6 +61,7 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
             <p>{opportunity.cancelReason}</p>
           </div>
         )}
+        <RecordAccess record={opportunity} />
       </div>
 
       <h4>Condiciones ({conditions.length})</h4>

@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { ApiResult } from './types';
+import type { ApiResult, VisibilityBody } from './types';
 import type { Trigger } from '../models/trigger';
 
 // Query params de GET /list/triggers (common/format_validations.go -> PaginationFormat +
@@ -29,8 +29,8 @@ export function listTriggers(params: ListTriggersParams, signal?: AbortSignal): 
   return api.get<ListTriggersData>('/list/triggers', { query: { ...params }, signal });
 }
 
-// Body de POST /operation/create/trigger (format_validates/operation_format_validate.go -> CreateTriggerFormat)
-export interface CreateTriggerBody {
+// Datos del trigger comunes a crear y actualizar (format_validates/operation_format_validate.go -> CreateTriggerFormat)
+export interface TriggerFields {
   tag: string; // unico entre los triggers
   name: string;
   description: string;
@@ -40,6 +40,10 @@ export interface CreateTriggerBody {
   idCandlestickTimeframe: string; // catalogo TYPE_CANDLE_STICK
   maxCandlestickQty: number; // mayor a 0
 }
+
+// Body de POST /operation/create/trigger: el trigger queda a nombre del usuario de la sesion (solo super usuario)
+// con la visibilidad enviada
+export type CreateTriggerBody = TriggerFields & VisibilityBody;
 
 // idWebhook es el id que va en la alerta de TradingView; se mantiene entre las versiones del trigger
 export interface CreateTriggerData {
@@ -52,8 +56,9 @@ export function createTrigger(body: CreateTriggerBody, signal?: AbortSignal): Pr
 }
 
 // Body de PUT /operation/update/trigger (UpdateTriggerFormat): el trigger a reemplazar y todos los datos de la
-// version nueva, con las mismas reglas que al crear. El tag puede ser el mismo del trigger anterior
-export interface UpdateTriggerBody extends CreateTriggerBody {
+// version nueva, con las mismas reglas que al crear. El tag puede ser el mismo del trigger anterior. El usuario y la
+// visibilidad no se envian: la version nueva conserva los del trigger anterior
+export interface UpdateTriggerBody extends TriggerFields {
   idTrigger: string;
 }
 

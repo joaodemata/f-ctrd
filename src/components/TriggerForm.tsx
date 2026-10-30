@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import type { ApiError } from '../api/errors';
-import type { CreateTriggerBody } from '../api/triggers';
+import type { TriggerFields } from '../api/triggers';
+import type { VisibilityBody } from '../api/types';
 import { CatalogType, TIMEFRAME_MINUTES, type Catalog } from '../models/catalog';
 import type { Trigger } from '../models/trigger';
 import { formatDuration } from '../utils/format';
@@ -9,6 +10,15 @@ import { CatalogSelect } from './CatalogSelect';
 import { ConditionPicker, type ConditionOption } from './ConditionPicker';
 import { ErrorBanner } from './ErrorBanner';
 import { FormField } from './FormField';
+import {
+  EMPTY_VISIBILITY_FORM,
+  VisibilityFields,
+  validateVisibility,
+  visibilityBody,
+  visibilityServerErrors,
+  type VisibilityFieldErrors,
+  type VisibilityFormValues,
+} from './VisibilityFields';
 
 type CatalogOption = Pick<Catalog, 'id' | 'tag' | 'name'>;
 
@@ -21,6 +31,8 @@ export interface TriggerFormValues {
   timeframe: CatalogOption | null;
   maxCandlestickQty: string;
   conditions: ConditionOption[];
+  // Solo al crear: al actualizar C-TRD conserva la visibilidad del trigger anterior
+  visibility: VisibilityFormValues;
 }
 
 export const EMPTY_TRIGGER_FORM: TriggerFormValues = {
@@ -32,6 +44,7 @@ export const EMPTY_TRIGGER_FORM: TriggerFormValues = {
   timeframe: null,
   maxCandlestickQty: '',
   conditions: [],
+  visibility: EMPTY_VISIBILITY_FORM,
 };
 
 // Valores iniciales para editar: el trigger guarda copia del id, tag y nombre de cada referencia
@@ -52,10 +65,11 @@ export function triggerFormValues(trigger: Trigger): TriggerFormValues {
       id: condition.idCondition,
       name: condition.nameCondition,
     })),
+    visibility: EMPTY_VISIBILITY_FORM,
   };
 }
 
-type FieldErrors = Partial<Record<keyof CreateTriggerBody, string>>;
+type FieldErrors = Partial<Record<keyof TriggerFields, string>>;
 
 // Mismas reglas que CreateTriggerFormat / UpdateTriggerFormat en C-TRD, para avisar antes de enviar
 function validate(values: TriggerFormValues): FieldErrors {
@@ -77,7 +91,10 @@ function timeframeDisabledReason(catalog: Catalog): string | null {
 
 interface TriggerFormProps {
   initialValues: TriggerFormValues;
-  onSubmit: (body: CreateTriggerBody) => void;
+  // visibility es null si el formulario no la muestra (withVisibility)
+  onSubmit: (fields: TriggerFields, visibility: VisibilityBody | null) => void;
+  // Muestra la visibilidad: solo al crear
+  withVisibility?: boolean;
   isPending: boolean;
   error: ApiError | undefined;
   submitLabel: string;
@@ -101,23 +118,36 @@ export function TriggerForm({
   cancelLabel,
   onCancel,
   notice,
+  withVisibility = false,
 }: TriggerFormProps) {
   const [values, setValues] = useState<TriggerFormValues>(initialValues);
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
+  const [visibilityErrors, setVisibilityErrors] = useState<VisibilityFieldErrors>({});
 
   const set = <K extends keyof TriggerFormValues>(key: K, value: TriggerFormValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }));
 
   // Error local primero; si no, el que devolvio C-TRD para ese campo
-  const fieldError = (field: keyof CreateTriggerBody) => clientErrors[field] ?? error?.fieldErrors[field];
+  const fieldError = (field: keyof TriggerFields) => clientErrors[field] ?? error?.fieldErrors[field];
+  const serverVisibilityErrors = visibilityServerErrors(error);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const errors = validate(values);
+    const nextVisibilityErrors = withVisibility ? validateVisibility(values.visibility) : {};
     setClientErrors(errors);
-    if (Object.keys(errors).length > 0 || !values.asset || !values.action || !values.timeframe) return;
+    setVisibilityErrors(nextVisibilityErrors);
+    if (
+      Object.keys(errors).length > 0 ||
+      Object.keys(nextVisibilityErrors).length > 0 ||
+      !values.asset ||
+      !values.action ||
+      !values.timeframe
+    ) {
+      return;
+    }
 
-    onSubmit({
+    const fields: TriggerFields = {
       tag: values.tag.trim(),
       name: values.name.trim(),
       description: values.description.trim(),
@@ -126,7 +156,8 @@ export function TriggerForm({
       idCandlestickTimeframe: values.timeframe.id,
       maxCandlestickQty: Number(values.maxCandlestickQty),
       conditions: values.conditions.map((condition) => condition.id),
-    });
+    };
+    onSubmit(fields, withVisibility ? visibilityBody(values.visibility) : null);
   };
 
   const qty = Number(values.maxCandlestickQty);
@@ -222,6 +253,15 @@ export function TriggerForm({
       >
         <ConditionPicker value={values.conditions} onChange={(conditions) => set('conditions', conditions)} />
       </FormField>
+
+      {withVisibility && (
+        <VisibilityFields
+          values={values.visibility}
+          onChange={(visibility) => set('visibility', visibility)}
+          errors={{ ...serverVisibilityErrors, ...visibilityErrors }}
+          note="Las oportunidades del trigger copian su visibilidad y se mantiene al actualizarlo."
+        />
+      )}
 
       {notice}
       {error && <ErrorBanner error={error} />}
