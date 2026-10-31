@@ -84,6 +84,7 @@ CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_C
 - One endpoint function per C-TRD route in `src/api/<resource>.ts`, named after the action (`listOpportunities`, `createTrigger`...).
 - When a C-TRD model or response changes, update `src/models/` in the same change.
 - Colors are CSS variables in `styles.css` with a dark-mode override; status colors are driven by `data-status="<TAG>"`.
+- Brand: seedwise.io. The logo is `components/SeedwiseLogo.tsx` (`animated` plays the growth sequence) with colors `--brand-*`; `public/favicon.svg` and `public/seedwise-logo.svg` are static copies of the same paths, so keep them in sync.
 
 ## Rules for Claude
 
