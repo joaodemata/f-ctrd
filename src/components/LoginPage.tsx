@@ -6,6 +6,7 @@ import { useHashParams } from '../hooks/useHashRoute';
 import { userDisplayName } from '../models/user';
 import { ErrorBanner } from './ErrorBanner';
 import { FormField } from './FormField';
+import { SeedwiseLogo } from './SeedwiseLogo';
 
 interface FieldErrors {
   username?: string;
@@ -51,6 +52,7 @@ export function LoginPage() {
   if (auth.status === 'authenticated' && auth.user && !mutation.data) {
     return (
       <main className="page page--narrow">
+        <LoginHero />
         <div className="page__head">
           <h1>Sesion iniciada</h1>
         </div>
@@ -73,6 +75,7 @@ export function LoginPage() {
 
   return (
     <main className="page page--narrow">
+      <LoginHero />
       <div className="page__head">
         <div>
           <h1>Iniciar sesion</h1>
@@ -123,5 +126,16 @@ export function LoginPage() {
         </div>
       </form>
     </main>
+  );
+}
+
+// Logo grande animado de seedwise.io sobre el formulario
+function LoginHero() {
+  return (
+    <div className="login-hero">
+      <SeedwiseLogo animated className="seedwise-logo--sway" title="seedwise.io" />
+      <span className="login-hero__name">seedwise</span>
+      <p className="tagline">Siembra hoy, cosecha mañana.</p>
+    </div>
   );
 }

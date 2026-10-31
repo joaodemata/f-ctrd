@@ -21,6 +21,11 @@
   --status-canceled: #cf222e;
   --status-inactive: #d15704;
 
+  --brand-leaf: #2f9e44;
+  --brand-coin: #e8b923;
+  --brand-coin-text: #6b4e00;
+  --brand-soil: #8a6a4a;
+
   --shadow: 0 6px 20px rgb(15 23 42 / 0.08);
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
@@ -53,6 +58,11 @@
     --status-expired: #8b949e;
     --status-canceled: #f85149;
     --status-inactive: #ff8a4c;
+
+    --brand-leaf: #3fb950;
+    --brand-coin: #e3b341;
+    --brand-coin-text: #3d2c00;
+    --brand-soil: #a8866a;
 
     --shadow: 0 8px 24px rgb(0 0 0 / 0.35);
 
@@ -206,34 +216,184 @@ p {
 .topbar__brand {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.topbar__wordmark {
   font-weight: 800;
-  letter-spacing: 0.04em;
-  background: linear-gradient(90deg, var(--accent), var(--status-active));
+  font-size: 1.1rem;
+  letter-spacing: 0.01em;
+  background: linear-gradient(90deg, var(--brand-leaf), var(--brand-coin));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .topbar__logo {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: var(--status-active);
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 40;
-  animation: draw-logo 1.2s var(--ease) both;
+  width: 30px;
+  height: 30px;
 }
 
-@keyframes draw-logo {
+/* Logo de seedwise.io (SeedwiseLogo.tsx) */
+
+.seedwise-logo {
+  display: block;
+  overflow: visible;
+}
+
+.seedwise-logo__soil {
+  fill: none;
+  stroke: var(--brand-soil);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.seedwise-logo__stem {
+  fill: none;
+  stroke: var(--brand-leaf);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.seedwise-logo__leaf {
+  fill: var(--brand-leaf);
+  transform-box: fill-box;
+}
+
+.seedwise-logo__leaf--left {
+  transform-origin: 100% 100%;
+}
+
+.seedwise-logo__leaf--right {
+  transform-origin: 0% 100%;
+}
+
+.seedwise-logo__coin {
+  fill: var(--brand-coin);
+}
+
+.seedwise-logo__fruit {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.seedwise-logo__dollar {
+  fill: none;
+  stroke: var(--brand-coin-text);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Animacion: tierra, tallo creciendo, hojas abriendose, la moneda brota y se escribe el $ */
+
+.seedwise-logo--animated .seedwise-logo__soil {
+  animation: seedwise-fade 0.4s var(--ease) both;
+}
+
+.seedwise-logo--animated .seedwise-logo__stem {
+  stroke-dasharray: 1;
+  animation: seedwise-draw 0.9s 0.2s var(--ease) both;
+}
+
+.seedwise-logo--animated .seedwise-logo__leaf--left {
+  animation: seedwise-unfurl 0.55s 0.75s var(--ease) both;
+}
+
+.seedwise-logo--animated .seedwise-logo__leaf--right {
+  animation: seedwise-unfurl 0.55s 0.95s var(--ease) both;
+}
+
+.seedwise-logo--animated .seedwise-logo__fruit {
+  animation: seedwise-sprout 0.6s 1.25s var(--ease) both;
+}
+
+.seedwise-logo--animated .seedwise-logo__dollar {
+  stroke-dasharray: 1;
+  animation: seedwise-draw 0.6s 1.7s ease-out both;
+}
+
+/* Version grande: despues de crecer la planta se mece con el viento */
+.seedwise-logo--sway .seedwise-logo__plant {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: seedwise-sway 4s 2.4s ease-in-out infinite;
+}
+
+@keyframes seedwise-fade {
   from {
-    stroke-dashoffset: 40;
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes seedwise-draw {
+  from {
+    stroke-dashoffset: 1;
   }
   to {
     stroke-dashoffset: 0;
   }
+}
+
+@keyframes seedwise-unfurl {
+  from {
+    transform: scale(0) rotate(-25deg);
+  }
+  to {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes seedwise-sprout {
+  0% {
+    transform: scale(0);
+  }
+  65% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes seedwise-sway {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(2.5deg);
+  }
+  75% {
+    transform: rotate(-2.5deg);
+  }
+}
+
+.login-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.login-hero .seedwise-logo {
+  width: 112px;
+  height: 112px;
+}
+
+.login-hero__name {
+  font-weight: 800;
+  font-size: 1.6rem;
+  background: linear-gradient(90deg, var(--brand-leaf), var(--brand-coin));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .topbar__api {
@@ -345,6 +505,18 @@ p {
 .empty {
   padding: 32px;
   text-align: center;
+  color: var(--muted);
+}
+
+.empty p {
+  margin: 0;
+}
+
+/* Slogans de seedwise.io: texto secundario que no compite con el contenido */
+.tagline {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-style: italic;
   color: var(--muted);
 }
 

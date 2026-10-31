@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import { useState, type ComponentType } from 'react';
 import { apiBaseUrl } from './api/config';
 import { ConditionPage } from './components/ConditionPage';
 import { Dashboard } from './components/Dashboard';
@@ -8,6 +8,7 @@ import { LoginPage } from './components/LoginPage';
 import { MarketBackdrop } from './components/MarketBackdrop';
 import { NavBar, type NavItem } from './components/NavBar';
 import { RestrictedPage } from './components/RestrictedPage';
+import { SeedwiseLogo } from './components/SeedwiseLogo';
 import { SessionMenu } from './components/SessionMenu';
 import { TriggerPage } from './components/TriggerPage';
 import { TriggerVersionsPage } from './components/TriggerVersionsPage';
@@ -45,6 +46,8 @@ const ROUTES: readonly Route[] = [
 export function App() {
   const path = useHashRoute();
   const auth = useAuth();
+  // Cambiar la key vuelve a montar el logo y repite la animacion de crecimiento
+  const [logoRun, setLogoRun] = useState(0);
   // Una ruta desconocida muestra las oportunidades
   const route = ROUTES.find((item) => item.path === path) ?? ROUTES[0]!;
   const allowed = !route.superUser || auth.isSuperUser;
@@ -57,13 +60,10 @@ export function App() {
     <>
       <MarketBackdrop />
       <header className="topbar">
-        <span className="topbar__brand">
-          <svg className="topbar__logo" viewBox="0 0 24 24" aria-hidden="true">
-            <polyline points="3,17 9,11 13,14 21,6" />
-            <polyline points="15,6 21,6 21,12" />
-          </svg>
-          F-CTRD
-        </span>
+        <a className="topbar__brand" href="#/" onMouseEnter={() => setLogoRun((run) => run + 1)}>
+          <SeedwiseLogo key={logoRun} animated className="topbar__logo" />
+          <span className="topbar__wordmark">seedwise</span>
+        </a>
         <NavBar items={navItems} currentPath={route.navPath ?? route.path} />
         <span className="muted small topbar__api">API {apiBaseUrl}</span>
         <SessionMenu />
