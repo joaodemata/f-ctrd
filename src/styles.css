@@ -508,6 +508,18 @@ p {
   color: var(--muted);
 }
 
+.empty p {
+  margin: 0;
+}
+
+/* Slogans de seedwise.io: texto secundario que no compite con el contenido */
+.tagline {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
 /* Controls */
 
 .button {

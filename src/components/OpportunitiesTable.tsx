@@ -22,7 +22,12 @@ export function OpportunitiesTable({ opportunities }: OpportunitiesTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (opportunities.length === 0) {
-    return <p className="empty">No hay oportunidades con estos filtros.</p>;
+    return (
+      <div className="empty">
+        <p>No hay oportunidades con estos filtros.</p>
+        <p className="tagline">Las buenas oportunidades toman tiempo en crecer.</p>
+      </div>
+    );
   }
 
   return (

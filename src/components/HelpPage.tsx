@@ -79,6 +79,7 @@ export function HelpPage() {
       <div className="page__head">
         <div>
           <h1>Ayuda</h1>
+          <p className="tagline">Invierte como jardinero, no como apostador.</p>
           <p className="muted small">
             Como nace una oportunidad, como la mueven las condiciones y como combinarlas para armar senales.
           </p>

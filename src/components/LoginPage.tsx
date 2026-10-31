@@ -135,6 +135,7 @@ function LoginHero() {
     <div className="login-hero">
       <SeedwiseLogo animated className="seedwise-logo--sway" title="seedwise.io" />
       <span className="login-hero__name">seedwise</span>
+      <p className="tagline">Siembra hoy, cosecha mañana.</p>
     </div>
   );
 }
