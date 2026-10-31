@@ -29,6 +29,10 @@ Copy `.env.example` to `.env.local`:
 
 CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_CORS_ORIGINS` (comma-separated) and default to `http://localhost:5173`. Serving the frontend from another origin means adding it there.
 
+## Deployment
+
+Same branches and promotion flow as C-TRD: `develop` → `qa` → `sandbox` (pre-production) → `production`. A push to one of them runs `.github/workflows/deploy.yml` on the self-hosted runner in the VPS (label `fctrd-vps`): it builds with `VITE_API_BASE_URL` of that environment and publishes `dist/` to `/opt/ctrd/web/<env>`, served by Caddy (`dev.app.`, `qa.app.`, `sandbox.app.`, `app.<domain>`). VPS setup lives in C-TRD `deploy/README.md`.
+
 ## Project layout
 
 - `src/api/`: the only place that talks to the network

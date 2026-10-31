@@ -1,0 +1,50 @@
+# Publica el build en el VPS en cada push a una rama de entorno. Corre en el runner self-hosted del VPS.
+# Solo se usa "push": nunca agregar pull_request aqui, un fork podria ejecutar codigo en el servidor
+name: Deploy
+
+on:
+  push:
+    branches: [develop, qa, sandbox, production]
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, fctrd-vps]
+    steps:
+      - uses: actions/checkout@v4
+
+      # El dominio sale del mismo archivo que usa Caddy en C-TRD (/opt/ctrd/env/caddy.env)
+      - name: Resolver entorno
+        run: |
+          set -a; . /opt/ctrd/env/caddy.env; set +a
+          case "${GITHUB_REF_NAME}" in
+            develop)    env=dev;     api="https://dev.api.${CTRD_DOMAIN}" ;;
+            qa)         env=qa;      api="https://qa.api.${CTRD_DOMAIN}" ;;
+            sandbox)    env=sandbox; api="https://sandbox.api.${CTRD_DOMAIN}" ;;
+            production) env=prod;    api="https://api.${CTRD_DOMAIN}" ;;
+            *) echo "Rama sin entorno: ${GITHUB_REF_NAME}"; exit 1 ;;
+          esac
+          echo "TARGET_ENV=${env}" >> "$GITHUB_ENV"
+          echo "VITE_API_BASE_URL=${api}" >> "$GITHUB_ENV"
+
+      # Node corre en un contenedor temporal, no hace falta instalarlo en el VPS.
+      # Se usa el usuario del runner para que dist/ y node_modules no queden como root
+      - name: Construir
+        run: |
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp \
+            -e VITE_API_BASE_URL \
+            -v "$PWD":/app -w /app node:18-alpine \
+            sh -c "npm ci && npm run build"
+
+      # Se copia a una carpeta nueva y se cambia de nombre, asi Caddy nunca sirve un build a medias
+      - name: Publicar
+        run: |
+          target="/opt/ctrd/web/${TARGET_ENV}"
+          rm -rf "${target}.new" "${target}.old"
+          cp -r dist "${target}.new"
+          if [ -d "${target}" ]; then mv "${target}" "${target}.old"; fi
+          mv "${target}.new" "${target}"
+          rm -rf "${target}.old"
