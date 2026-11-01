@@ -66,7 +66,7 @@ export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
           ) : (
             <>
               <div className="table-wrap">
-                <table className="table">
+                <table className="table table--cards">
                   <thead>
                     <tr>
                       <th scope="col">Condicion</th>
@@ -81,28 +81,28 @@ export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
                   <tbody>
                     {list.data.conditions.map((condition) => (
                       <tr key={condition.id} className="table__row" data-status={condition.tagStatus}>
-                        <td>
+                        <td className="cell--main">
                           <strong>{condition.name}</strong>
                           {condition.tag && <div className="muted small">{condition.tag}</div>}
                           {condition.description && <div className="muted small">{condition.description}</div>}
                         </td>
-                        <td>{condition.nameTypeCondition || '—'}</td>
-                        <td>{condition.nameProvider}</td>
-                        <td>
+                        <td data-label="Tipo">{condition.nameTypeCondition || '—'}</td>
+                        <td data-label="Proveedor">{condition.nameProvider}</td>
+                        <td data-label="Callback">
                           <code className="small">{condition.callbackFunction}</code>
                           <CallbackParametersList parameters={condition.parametersCallback} />
                         </td>
-                        <td>
+                        <td data-label="Cada">
                           {condition.isWebhookOnly
                             ? 'Webhook'
                             : condition.intervalSeconds
                               ? formatDuration(Math.round(condition.intervalSeconds / 60))
                               : '—'}
                         </td>
-                        <td>
+                        <td data-label="Estado">
                           <StatusBadge tag={condition.tagStatus} label={condition.status || condition.tagStatus} />
                         </td>
-                        <td>{formatDateTime(condition.lastExecutedAt)}</td>
+                        <td data-label="Ultima evaluacion">{formatDateTime(condition.lastExecutedAt)}</td>
                       </tr>
                     ))}
                   </tbody>
