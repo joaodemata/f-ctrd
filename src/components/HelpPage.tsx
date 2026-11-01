@@ -125,7 +125,7 @@ export function HelpPage() {
         <LifecycleDiagram />
 
         <div className="table-wrap">
-          <table className="table help-table">
+          <table className="table help-table table--cards table--cards-single">
             <thead>
               <tr>
                 <th scope="col">Estado</th>
@@ -135,56 +135,60 @@ export function HelpPage() {
             </thead>
             <tbody>
               <tr>
-                <td>
+                <td className="cell--main">
                   <StatusBadge tag={OpportunityStatusTag.Ongoing} label="En Curso" />
                 </td>
-                <td>Llega la alerta y el trigger tiene condiciones. Desde ese momento corre el plazo de expiracion.</td>
-                <td>
+                <td data-label="Cuando entra">
+                  Llega la alerta y el trigger tiene condiciones. Desde ese momento corre el plazo de expiracion.
+                </td>
+                <td data-label="Precio que guarda">
                   <strong>Disparo</strong>: el <code>price</code> que envio TradingView.
                 </td>
               </tr>
               <tr>
-                <td>
+                <td className="cell--main">
                   <StatusBadge tag={OpportunityStatusTag.Active} label="Activa" />
                 </td>
-                <td>
+                <td data-label="Cuando entra">
                   En un ciclo del cronjob todas sus condiciones estan Activas y todavia no vencio. Si el trigger no tiene
                   condiciones, la oportunidad nace directamente Activa.
                 </td>
-                <td>
+                <td data-label="Precio que guarda">
                   <strong>Activacion</strong>: precio de mercado del asset al activarse (si no se pudo obtener, queda
                   vacio). Sin condiciones, el mismo precio de la alerta.
                 </td>
               </tr>
               <tr>
-                <td>
+                <td className="cell--main">
                   <StatusBadge tag={OpportunityStatusTag.Expired} label="Expirada" />
                 </td>
-                <td>
+                <td data-label="Cuando entra">
                   Seguia En Curso cuando paso su fecha de expiracion: las condiciones no se cumplieron a tiempo. Es un
                   estado final.
                 </td>
-                <td>—</td>
+                <td data-label="Precio que guarda">—</td>
               </tr>
               <tr>
-                <td>
+                <td className="cell--main">
                   <StatusBadge tag={OpportunityStatusTag.Finished} label="Finalizada" />
                 </td>
-                <td>Seguia Activa cuando paso su fecha de expiracion (cronjob, cada minuto). Es un estado final.</td>
-                <td>
+                <td data-label="Cuando entra">
+                  Seguia Activa cuando paso su fecha de expiracion (cronjob, cada minuto). Es un estado final.
+                </td>
+                <td data-label="Precio que guarda">
                   <strong>Cierre</strong>: precio de mercado del asset al finalizar (si no se pudo obtener, queda vacio).
                 </td>
               </tr>
               <tr>
-                <td>
+                <td className="cell--main">
                   <StatusBadge tag={OpportunityStatusTag.Canceled} label="Cancelada" />
                 </td>
-                <td>
+                <td data-label="Cuando entra">
                   Llega una alerta del trigger con <code>idCancel</code> mientras la oportunidad esta En Curso o Activa.
                   Guarda tambien el motivo. Es un estado final (ver <SectionLink id="ayuda-cancelar">Cancelar</SectionLink>
                   ).
                 </td>
-                <td>
+                <td data-label="Precio que guarda">
                   <strong>Cierre</strong>: el <code>price</code> que envio TradingView en la alerta de cancelacion.
                 </td>
               </tr>
@@ -586,7 +590,7 @@ function CallbackCatalog() {
 
   return (
     <div className="table-wrap">
-      <table className="table help-table">
+      <table className="table help-table table--cards table--cards-single">
         <thead>
           <tr>
             <th scope="col">API</th>
@@ -597,31 +601,31 @@ function CallbackCatalog() {
         <tbody>
           {catalog.data.map(({ api, callbacks }) =>
             callbacks.length === 0 ? (
-              <tr key={api.id}>
-                <td>
+              <tr key={api.id} className="help-table__group">
+                <td className="cell--main">
                   <strong>{api.name}</strong>
                   <div className="muted small">{api.nameProvider}</div>
                 </td>
-                <td colSpan={2} className="muted">
+                <td colSpan={2} className="muted" data-label="Callback">
                   Ningun callback lee el formato {api.responseFormat}.
                 </td>
               </tr>
             ) : (
               callbacks.map((callback, index) => (
-                <tr key={`${api.id}-${callback.id}`}>
+                <tr key={`${api.id}-${callback.id}`} className={index === 0 ? 'help-table__group' : undefined}>
                   {index === 0 && (
-                    <td rowSpan={callbacks.length}>
+                    <td rowSpan={callbacks.length} className="cell--main">
                       <strong>{api.name}</strong>
                       <div className="muted small">{api.nameProvider}</div>
                     </td>
                   )}
-                  <td>
+                  <td data-label="Callback">
                     {callback.name}
                     <div className="muted small">
                       <code>{callback.id}</code>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Se cumple cuando">
                     {callback.description}
                     {callback.parameters.length > 0 && (
                       <div className="muted small">
@@ -647,16 +651,17 @@ function CallbackCatalog() {
   );
 }
 
-// Diagrama de estados
+const LIFECYCLE_DESCRIPTION =
+  'La alerta crea la oportunidad En Curso (con condiciones) o Activa (sin condiciones). En Curso pasa a Activa ' +
+  'cuando se cumplen todas las condiciones o a Expirada si vence. Activa pasa a Finalizada cuando vence. En Curso ' +
+  'y Activa pasan a Cancelada con una alerta de cancelacion.';
+
+// Diagrama de estados: horizontal en pantallas anchas y vertical en el celular (el CSS muestra uno u otro)
 function LifecycleDiagram() {
   return (
     <div className="help-diagram">
-      <svg viewBox="0 0 880 320" role="img" aria-labelledby="ciclo-svg-title">
-        <title id="ciclo-svg-title">
-          La alerta crea la oportunidad En Curso (con condiciones) o Activa (sin condiciones). En Curso pasa a Activa
-          cuando se cumplen todas las condiciones o a Expirada si vence. Activa pasa a Finalizada cuando vence. En Curso
-          y Activa pasan a Cancelada con una alerta de cancelacion.
-        </title>
+      <svg viewBox="0 0 880 320" role="img" aria-labelledby="ciclo-svg-title" className="help-diagram__wide">
+        <title id="ciclo-svg-title">{LIFECYCLE_DESCRIPTION}</title>
         <defs>
           <marker id="ciclo-flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
             <path d="M0 0 L10 5 L0 10 z" className="help-diagram__head" />
@@ -701,6 +706,64 @@ function LifecycleDiagram() {
         <DiagramNode x={730} y={122} width={140} title="Finalizada" subtitle="estado final" status={OpportunityStatusTag.Finished} />
         <DiagramNode x={385} y={230} width={150} title="Cancelada" subtitle="alerta con idCancel" status={OpportunityStatusTag.Canceled} />
       </svg>
+
+      <svg viewBox="0 0 340 416" role="img" aria-labelledby="ciclo-svg-title-compacto" className="help-diagram__compact">
+        <title id="ciclo-svg-title-compacto">{LIFECYCLE_DESCRIPTION}</title>
+        <defs>
+          <marker
+            id="ciclo-flecha-compacto"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto"
+          >
+            <path d="M0 0 L10 5 L0 10 z" className="help-diagram__head" />
+          </marker>
+        </defs>
+
+        <g className="help-diagram__edges" markerEnd="url(#ciclo-flecha-compacto)">
+          <path d="M140 66 L92 118" />
+          <path d="M200 66 L248 118" />
+          <path d="M130 148 H208" />
+          <path d="M40 176 V348" />
+          <path d="M300 176 V348" />
+          <path d="M100 176 L140 238" />
+          <path d="M240 176 L200 238" />
+        </g>
+
+        <g className="help-diagram__labels">
+          <text x="104" y="88" textAnchor="end">
+            con condiciones
+          </text>
+          <text x="236" y="88">
+            sin condiciones
+          </text>
+          <text x="170" y="140" textAnchor="middle">
+            todas Activas
+          </text>
+          <text x="170" y="166" textAnchor="middle">
+            (cada minuto)
+          </text>
+          <text x="48" y="316">
+            vence
+          </text>
+          <text x="48" y="330">
+            velas × temporalidad
+          </text>
+          <text x="292" y="316" textAnchor="end">
+            vence
+          </text>
+        </g>
+
+        <DiagramNode x={110} y={10} width={120} title="Alerta" subtitle="TradingView" />
+        <DiagramNode x={10} y={120} width={120} title="En Curso" subtitle="espera condiciones" status={OpportunityStatusTag.Ongoing} />
+        <DiagramNode x={210} y={120} width={120} title="Activa" subtitle="senal confirmada" status={OpportunityStatusTag.Active} />
+        <DiagramNode x={110} y={240} width={120} title="Cancelada" subtitle="alerta con idCancel" status={OpportunityStatusTag.Canceled} />
+        <DiagramNode x={10} y={350} width={120} title="Expirada" subtitle="estado final" status={OpportunityStatusTag.Expired} />
+        <DiagramNode x={210} y={350} width={120} title="Finalizada" subtitle="estado final" status={OpportunityStatusTag.Finished} />
+      </svg>
     </div>
   );
 }
@@ -715,7 +778,7 @@ function CancelReasonCatalog() {
 
   return (
     <div className="table-wrap">
-      <table className="table help-table">
+      <table className="table help-table table--cards table--cards-single">
         <thead>
           <tr>
             <th scope="col">Razon</th>
@@ -726,14 +789,14 @@ function CancelReasonCatalog() {
         <tbody>
           {reasons.data.catalogs.map((reason) => (
             <tr key={reason.id}>
-              <td>
+              <td className="cell--main">
                 <strong>{reason.name}</strong>
                 <div className="muted small">{reason.tag}</div>
               </td>
-              <td>
+              <td data-label="idCancel">
                 <code>{reason.id}</code>
               </td>
-              <td>{reason.description}</td>
+              <td data-label="Descripcion">{reason.description}</td>
             </tr>
           ))}
         </tbody>

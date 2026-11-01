@@ -21,7 +21,7 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
 
   return (
     <div className="table-wrap">
-      <table className="table">
+      <table className="table table--cards">
         <thead>
           <tr>
             <th scope="col" aria-label="Expandir" />
@@ -40,7 +40,7 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
             return (
               <Fragment key={trigger.id}>
                 <tr className="table__row" data-expanded={expanded}>
-                  <td>
+                  <td className="cell--toggle">
                     <button
                       type="button"
                       className="icon-button"
@@ -51,7 +51,7 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
                       {expanded ? '▾' : '▸'}
                     </button>
                   </td>
-                  <td>
+                  <td className="cell--main">
                     <strong>{trigger.name}</strong>
                     <div className="muted small">
                       {trigger.tag}
@@ -59,16 +59,16 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
                       {` · ${visibilityLabel(trigger)}`}
                     </div>
                   </td>
-                  <td>{trigger.asset || trigger.tagAsset}</td>
-                  <td>{trigger.action || trigger.tagAction}</td>
-                  <td>
+                  <td data-label="Asset">{trigger.asset || trigger.tagAsset}</td>
+                  <td data-label="Accion">{trigger.action || trigger.tagAction}</td>
+                  <td data-label="Velas">
                     {trigger.maxCandlestickQty} × {trigger.candlestickTimeframe || trigger.tagCandlestickTimeframe}
                   </td>
-                  <td className="num">{trigger.conditions?.length ?? 0}</td>
-                  <td>
+                  <td className="num" data-label="Condiciones">{trigger.conditions?.length ?? 0}</td>
+                  <td data-label="Estado">
                     <StatusBadge tag={trigger.tagStatus} label={trigger.status || trigger.tagStatus} />
                   </td>
-                  <td>{formatDateTime(trigger.createdDate)}</td>
+                  <td data-label="Creado">{formatDateTime(trigger.createdDate)}</td>
                 </tr>
                 {expanded && (
                   <tr className="table__detail">
