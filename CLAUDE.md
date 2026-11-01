@@ -29,6 +29,10 @@ Copy `.env.example` to `.env.local`:
 
 CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_CORS_ORIGINS` (comma-separated) and default to `http://localhost:5173`. Serving the frontend from another origin means adding it there.
 
+## Deployment
+
+Same branches and promotion flow as C-TRD: `develop` → `qa` → `sandbox` (pre-production) → `production`. A push to one of them runs `.github/workflows/deploy.yml` on the self-hosted runner in the VPS (label `fctrd-vps`): it builds with `VITE_API_BASE_URL` of that environment and publishes `dist/` to `/opt/ctrd/web/<env>`, served by Caddy (`dev.app.`, `qa.app.`, `sandbox.app.`, `app.<domain>`). VPS setup lives in C-TRD `deploy/README.md`.
+
 ## Project layout
 
 - `src/api/`: the only place that talks to the network
@@ -42,7 +46,7 @@ CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_C
 - `src/hooks/useApiQuery.ts`: standard hook for reads: loading/refreshing/error state, abort on unmount, polling
 - `src/hooks/useApiMutation.ts`: standard hook for writes (create, upload): `run(input)`, pending/error/data, abort on unmount
 - `src/hooks/useAuth.tsx`: `AuthProvider` (in `main.tsx`) and `useAuth()`: `status`, `user`, `isSuperUser`, `login`, `logout`. Validates the stored token with `/auth/me` on load
-- `src/hooks/useHashRoute.ts`: hash navigation (`#/triggers/nuevo`); `useHashParams()` reads params after the path (`#/triggers/versiones?id=...`). Routes and navbar items are the `ROUTES` table in `App.tsx`; routes with `navPath` are detail views hidden from the navbar; routes with `superUser` are hidden from the navbar and render `RestrictedPage` unless the session is the super user
+- `src/hooks/useHashRoute.ts`: hash navigation (`#/triggers/nuevo`); `useHashParams()` reads params after the path (`#/triggers/versiones?id=...`). Routes and navbar items are the `ROUTES` table in `App.tsx`; routes with `navPath` are detail views hidden from the navbar; routes with `superUser` are hidden from the navbar and render `RestrictedPage` unless the session is the super user. Admin flows (`group: 'admin'` + `description`) go in the navbar's "Administracion" dropdown instead of the bar: add new super-user flows there
 - `src/components/`: UI. One `*Page.tsx` per route: `Dashboard.tsx` (opportunities, owns filters/pagination), `TriggersPage.tsx` (active triggers, detail and edit via `TriggerEdit`), `TriggerVersionsPage.tsx` (all versions of one trigger), `TriggerPage.tsx` (create), `ConditionPage.tsx`, `GoogleTrendsPage.tsx`, `HelpPage.tsx` (functional help: opportunity life cycle, conditions, callbacks; it describes C-TRD behavior, so update it when the hook, the cronjobs or the callbacks change). Shared form pieces: `FormField`, `TriggerForm` (create and update), `VisibilityFields` (create trigger and condition), `AssetPicker`, `CatalogSelect`, `ConditionPicker`, `ApiParameterInput`. `RecordAccess` shows owner and visibility in detail panels
 - `src/utils/format.ts`: date, price and regex helpers
 

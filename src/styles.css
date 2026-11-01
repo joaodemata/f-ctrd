@@ -451,9 +451,108 @@ p {
   color: var(--text);
 }
 
-.navbar__link[aria-current='page'] {
+.navbar__link[data-current='true'] {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent);
+}
+
+/* Menu desplegable de administracion (NavBar.tsx) */
+
+.nav-menu {
+  position: relative;
+}
+
+.nav-menu__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nav-menu__toggle[aria-expanded='true']:not([data-current='true']) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.nav-menu__caret {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.2s var(--ease);
+}
+
+.nav-menu__toggle[aria-expanded='true'] .nav-menu__caret {
+  transform: rotate(180deg);
+}
+
+.nav-menu__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: 300px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: page-in 0.2s var(--ease) both;
+}
+
+.nav-menu__title {
+  margin: 0;
+  padding: 4px 10px 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.nav-menu__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.nav-menu__item {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.nav-menu__item:hover {
+  background: var(--surface-2);
+}
+
+.nav-menu__item[aria-current='page'] {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.nav-menu__label {
+  font-weight: 600;
+}
+
+.nav-menu__item[aria-current='page'] .nav-menu__label {
+  color: var(--accent);
+}
+
+.nav-menu__description {
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 /* Cada ruta se remonta (key) al navegar, asi la entrada se anima en cada cambio de pagina */
@@ -463,6 +562,9 @@ p {
   margin: 0 auto;
   padding: 24px;
   display: grid;
+  /* minmax(0, 1fr): el contenido ancho (tablas, codigo, diagramas) hace scroll dentro de su caja en lugar de
+     ensanchar la pagina mas que la pantalla */
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   animation: page-in 0.45s var(--ease) both;
 }
@@ -473,6 +575,7 @@ p {
 
 .stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -785,6 +888,7 @@ a {
 
 .form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -952,6 +1056,7 @@ a {
 
 .success {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   border-color: var(--success-border);
 }
@@ -1104,6 +1209,7 @@ a {
 .detail {
   padding: 16px 20px 20px 52px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -1115,7 +1221,7 @@ a {
 
 .kv {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 2px 12px;
   margin: 0;
 }
@@ -1127,6 +1233,7 @@ a {
 .kv dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 /* Un usuario de la lista privada por linea; los ids no caben en columnas angostas */
@@ -1154,6 +1261,11 @@ a {
   grid-template-columns: 110px 1fr;
   gap: 12px;
   align-items: start;
+}
+
+/* El badge ocupa su ancho, no el de la columna (en el celular la columna es todo el ancho) */
+.conditions li > .status-badge {
+  justify-self: start;
 }
 
 /* Las condiciones de un trigger no tienen estado propio: sin columna de badge */
@@ -1259,8 +1371,10 @@ a {
 
 .help-section {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
-  scroll-margin-top: 16px;
+  /* El indice hace scroll a la seccion: que el titulo no quede debajo de la barra superior fija */
+  scroll-margin-top: 80px;
   line-height: 1.5;
 }
 
@@ -1292,6 +1406,8 @@ a {
   background: var(--surface-2);
   counter-increment: paso;
   font-size: 0.9rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .help-pipeline strong::before {
@@ -1348,6 +1464,14 @@ a {
   width: 100%;
   min-width: 620px;
   height: auto;
+}
+
+/* Version vertical del diagrama para el celular */
+.help-diagram .help-diagram__compact {
+  display: none;
+  min-width: 0;
+  max-width: 360px;
+  margin: 0 auto;
 }
 
 .help-diagram__node rect {
@@ -1441,10 +1565,199 @@ a {
   }
 
   .kv--wide {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .kv--wide dd {
     margin-bottom: 6px;
+  }
+
+  /* iOS hace zoom al enfocar un campo con letra menor a 16px */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Barra superior: marca y sesion arriba, navegacion en una fila con scroll horizontal debajo */
+  .topbar {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    row-gap: 6px;
+  }
+
+  .navbar {
+    order: 3;
+    flex: 1 0 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+
+  .navbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navbar__link {
+    white-space: nowrap;
+  }
+
+  /* El panel se ubica respecto a la barra superior (no al menu) para no quedar recortado por el scroll horizontal
+     de la navegacion, y ocupa todo el ancho */
+  .nav-menu {
+    position: static;
+  }
+
+  .nav-menu__panel {
+    top: calc(100% + 4px);
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+
+  .dashboard,
+  .page {
+    padding-top: 16px;
+  }
+
+  .page__head,
+  .version__head {
+    flex-wrap: wrap;
+  }
+
+  /* Seis tarjetas de estado en dos filas de tres */
+  .summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .summary__card {
+    padding: 8px 10px;
+  }
+
+  .summary__label {
+    font-size: 0.8rem;
+  }
+
+  .summary__value {
+    font-size: 1.3rem;
+  }
+
+  .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Tablas como tarjetas: cada fila es una tarjeta con la celda principal arriba y el resto en dos columnas con su
+     etiqueta (data-label). El detalle expandido usa todo el ancho de la pantalla */
+  .table--cards,
+  .table--cards tbody {
+    display: block;
+  }
+
+  .table--cards thead {
+    display: none;
+  }
+
+  .table--cards tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+    position: relative;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table--cards td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    overflow-wrap: anywhere;
+  }
+
+  .table--cards td.num {
+    text-align: left;
+  }
+
+  .table--cards td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .table--cards .cell--main,
+  .table--cards-single td {
+    grid-column: 1 / -1;
+  }
+
+  .table--cards .cell--toggle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+
+  .table--cards .cell--toggle + .cell--main {
+    padding-right: 40px;
+  }
+
+  .table--cards tr.table__detail {
+    display: block;
+    padding: 0;
+  }
+
+  /* El borde de color del estado va en la tarjeta, no en la primera celda */
+  .table--cards .table__row[data-status] > td:first-child,
+  .table--cards .table__detail[data-status] > td:first-child {
+    box-shadow: none;
+  }
+
+  .table--cards .table__row[data-status],
+  .table--cards .table__detail[data-status] {
+    box-shadow: inset 3px 0 0 var(--tone, transparent);
+  }
+
+  /* Ayuda: el indice es una fila con scroll y el diagrama pasa a la version vertical */
+  .help-index {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -16px;
+    padding: 0 16px 2px;
+  }
+
+  .help-index::-webkit-scrollbar {
+    display: none;
+  }
+
+  .help-index .button {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .help-section {
+    scroll-margin-top: 110px;
+  }
+
+  /* Catalogo de callbacks: separa los grupos de cada API (la celda de la API solo esta en la primera fila) */
+  .table--cards .help-table__group:not(:first-child) {
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .panel--padded {
+    padding: 16px;
+  }
+
+  .help-diagram .help-diagram__wide {
+    display: none;
+  }
+
+  .help-diagram .help-diagram__compact {
+    display: block;
   }
 }
