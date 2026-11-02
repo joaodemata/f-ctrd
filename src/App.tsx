@@ -1,5 +1,8 @@
 import { useState, type ComponentType } from 'react';
 import { apiBaseUrl } from './api/config';
+import { AgentReviewPage } from './components/AgentReviewPage';
+import { AgentRunsPage } from './components/AgentRunsPage';
+import { AgentThesesPage } from './components/AgentThesesPage';
 import { ConditionPage } from './components/ConditionPage';
 import { Dashboard } from './components/Dashboard';
 import { GoogleTrendsPage } from './components/GoogleTrendsPage';
@@ -65,6 +68,30 @@ const ROUTES: readonly Route[] = [
     description: 'Subir el CSV de Google Trends de un asset',
     group: 'admin',
     component: GoogleTrendsPage,
+    superUser: true,
+  },
+  {
+    path: '/agentes/tesis',
+    label: 'Tesis de agentes',
+    description: 'Cola de ideas que los agentes procesan los viernes',
+    group: 'admin',
+    component: AgentThesesPage,
+    superUser: true,
+  },
+  {
+    path: '/agentes/corridas',
+    label: 'Corridas de agentes',
+    description: 'Pasos, problemas y resultado de cada corrida',
+    group: 'admin',
+    component: AgentRunsPage,
+    superUser: true,
+  },
+  {
+    path: '/agentes/revision',
+    label: 'Revision de agentes',
+    description: 'Aprobar o rechazar condiciones y triggers de los agentes',
+    group: 'admin',
+    component: AgentReviewPage,
     superUser: true,
   },
   { path: '/ayuda', label: 'Ayuda', component: HelpPage },

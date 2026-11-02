@@ -27,6 +27,7 @@ const SECTIONS = [
   { id: 'ayuda-callbacks', label: 'Callbacks' },
   { id: 'ayuda-senales', label: 'Senales complejas' },
   { id: 'ayuda-recetas', label: 'Ejemplos' },
+  { id: 'ayuda-agentes', label: 'Agentes de IA' },
   { id: 'ayuda-problemas', label: 'Problemas frecuentes' },
 ] as const;
 
@@ -233,7 +234,7 @@ export function HelpPage() {
         <dl className="kv kv--wide">
           <dt>Webhook</dt>
           <dd>
-            <code>POST {apiBaseUrl}/hook/trading_view</code>
+            <code>POST {apiBaseUrl}/hook/trigger</code>
           </dd>
           <dt>Mensaje</dt>
           <dd>
@@ -260,6 +261,11 @@ export function HelpPage() {
           <li>
             La regla de una oportunidad viva es por id: la version nueva puede abrir una oportunidad aunque la version
             anterior tenga una En Curso.
+          </li>
+          <li>
+            El trigger puede guardar su <strong>codigo Pine</strong>. Al guardarlo, <code>{'{{ID_WEBHOOK}}'}</code> se
+            reemplaza por el <code>idWebhook</code> del trigger, asi que el codigo ya trae el mensaje listo para la
+            alerta. Al editar, si el codigo queda vacio se conserva el anterior.
           </li>
         </ul>
       </Section>
@@ -304,7 +310,7 @@ export function HelpPage() {
         <dl className="kv kv--wide">
           <dt>Webhook</dt>
           <dd>
-            <code>POST {apiBaseUrl}/hook/trading_view</code>
+            <code>POST {apiBaseUrl}/hook/trigger</code>
           </dd>
           <dt>Mensaje</dt>
           <dd>
@@ -488,6 +494,48 @@ export function HelpPage() {
         </div>
       </Section>
 
+      <Section id="ayuda-agentes" title="Agentes de IA">
+        <p>
+          Los agentes convierten ideas de inversion en condiciones y un trigger con su codigo Pine. Todo lo que crean
+          queda <strong>Pendiente de aprobacion</strong> hasta que el super usuario lo revisa.
+        </p>
+        <ol className="help-list">
+          <li>
+            En <a href="#/agentes/tesis">Tesis de agentes</a> agregas una tesis (asset, accion e idea en texto libre). Las
+            tesis forman una cola: la mas antigua primero. Solo se pueden borrar las pendientes.
+          </li>
+          <li>
+            Cada viernes por la noche una corrida toma las 5 tesis pendientes mas antiguas; el resto espera a la semana
+            siguiente. Los agentes (Condition Designer, Trigger Composer y Pine Author) disenan las condiciones, el
+            trigger y el codigo, y C-TRD valida cada salida. Si Claude no esta disponible, la tesis vuelve a la cola.
+          </li>
+          <li>
+            En <a href="#/agentes/corridas">Corridas de agentes</a> ves cada intento de cada agente, los problemas que se
+            encontraron y que condiciones y trigger se crearon. Una corrida puede terminar Exitosa, Fallida o con{' '}
+            <em>Requiere informacion</em> si la tesis no alcanzaba para disenar la senal.
+          </li>
+          <li>
+            En <a href="#/agentes/revision">Revision de agentes</a> apruebas o rechazas. Mientras esten pendientes, el
+            cronjob no evalua esas condiciones y el webhook rechaza esos triggers.
+          </li>
+        </ol>
+        <ul className="help-list">
+          <li>
+            <strong>Aprobar un trigger</strong> lo deja Activo y aprueba sus condiciones pendientes, que pasan a Inactivas
+            y empiezan a evaluarse. Despues crea la alerta en TradingView con el codigo Pine del trigger.
+          </li>
+          <li>
+            <strong>Rechazar</strong> no se puede deshacer: queda <em>No aprobado</em>, no se borra, y ninguna condicion
+            rechazada se puede usar en un trigger nuevo o aprobado. Una condicion que usa un trigger solo se rechaza
+            despues de rechazar el trigger.
+          </li>
+          <li>
+            Editar un trigger pendiente desde <a href="#/triggers">Triggers</a> no aplica: ese listado solo muestra los
+            activos. Si hay que corregirlo, apruebalo y editalo despues, o rechazalo.
+          </li>
+        </ul>
+      </Section>
+
       <Section id="ayuda-problemas" title="Problemas frecuentes">
         <dl className="help-faq">
           <dt>La alerta llega pero no aparece una oportunidad nueva</dt>
@@ -496,6 +544,11 @@ export function HelpPage() {
             no existe", el trigger se edito y la alerta sigue usando el id viejo. Si la oportunidad se creo pero no se
             ve, revisa la <SectionLink id="ayuda-visibilidad">visibilidad</SectionLink> del trigger y con que usuario
             iniciaste sesion.
+          </dd>
+          <dt>La alerta responde "El trigger esta pendiente de aprobacion" o "no fue aprobado"</dt>
+          <dd>
+            El trigger lo creo un agente. Apruebalo en <a href="#/agentes/revision">Revision de agentes</a>; uno rechazado
+            no vuelve a recibir alertas.
           </dd>
           <dt>La oportunidad no pasa a Activa</dt>
           <dd>

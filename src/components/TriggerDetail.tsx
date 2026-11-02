@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { TIMEFRAME_MINUTES } from '../models/catalog';
 import { previousTriggerId, triggerRootId, TriggerStatusTag, type Trigger } from '../models/trigger';
 import { formatDateTime, formatDuration } from '../utils/format';
@@ -6,11 +7,14 @@ import { RecordAccess } from './RecordAccess';
 
 interface TriggerDetailProps {
   trigger: Trigger;
-  onEdit: (trigger: Trigger) => void;
+  // Sin onEdit no se ofrece editar (ej: en la revision de lo que crean los agentes)
+  onEdit?: (trigger: Trigger) => void;
+  // Acciones extra junto a las de edicion y versiones (ej: aprobar o rechazar)
+  actions?: ReactNode;
 }
 
 // Panel expandido de un trigger: descripcion, velas, condiciones y cadena de versiones
-export function TriggerDetail({ trigger, onEdit }: TriggerDetailProps) {
+export function TriggerDetail({ trigger, onEdit, actions }: TriggerDetailProps) {
   const conditions = trigger.conditions ?? [];
   const candleMinutes = TIMEFRAME_MINUTES[trigger.tagCandlestickTimeframe];
   // C-TRD solo actualiza triggers no borrados; la version anterior de uno actualizado queda Inactiva y borrada
@@ -81,19 +85,24 @@ export function TriggerDetail({ trigger, onEdit }: TriggerDetailProps) {
 
       {trigger.pineCode && (
         <>
-          <h4>Codigo Pine</h4>
+          <h4 className="copy-row">
+            Codigo Pine
+            <CopyButton text={trigger.pineCode} />
+          </h4>
           <pre className="code-block">{trigger.pineCode}</pre>
         </>
       )}
 
       <div className="form-actions">
-        {editable ? (
-          <button type="button" className="button button--primary" onClick={() => onEdit(trigger)}>
-            Editar trigger
-          </button>
-        ) : (
-          <p className="muted small">Version inactiva o reemplazada: solo se puede editar la version activa.</p>
-        )}
+        {actions}
+        {onEdit &&
+          (editable ? (
+            <button type="button" className="button button--primary" onClick={() => onEdit(trigger)}>
+              Editar trigger
+            </button>
+          ) : (
+            <p className="muted small">Version inactiva o reemplazada: solo se puede editar la version activa.</p>
+          ))}
         {previousId && (
           <a className="button" href={`#/triggers/versiones?id=${triggerRootId(trigger)}`}>
             Mostrar detalle de versiones

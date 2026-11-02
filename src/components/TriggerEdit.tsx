@@ -53,6 +53,7 @@ export function TriggerEdit({ trigger, onClose }: TriggerEditProps) {
       pendingLabel="Guardando…"
       cancelLabel="Cancelar"
       onCancel={() => onClose(false)}
+      codeHint="Vacio conserva el codigo actual."
       notice={
         <p className="notice">
           Al guardar, C-TRD crea una nueva version del trigger con <strong>otro ID</strong> y deja inactiva la actual.
