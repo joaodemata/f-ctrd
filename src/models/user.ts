@@ -44,11 +44,18 @@ export function isOwnedBy(record: RecordOwner, user: User | null | undefined): b
   return !!user && hasOwner(record) && record.idUser === user.id;
 }
 
-// common/constants.go -> UserPrivilegeSuperUser / UserPrivilegeGenericUser
+// common/constants.go -> UserPrivilegeSuperUser / UserPrivilegeGenericUser / UserPrivilegeAgent. El agente es el
+// usuario claude: lo que crea queda pendiente de aprobacion del super usuario
 export const USER_PRIVILEGE = {
   superUser: { id: '6ae38e7bb1bb56b09f96ce13', tag: 'SUPER_USER' },
   genericUser: { id: '6ae38ef3b1bb56b09f96ce14', tag: 'GENERIC_USER' },
+  agent: { id: '6ae86ce7b01de16516693815', tag: 'AGENT' },
 } as const;
+
+// Igual que models.IsAgentOwner: el registro lo creo un agente
+export function isAgentOwner(record: RecordOwner): boolean {
+  return record.tagTypePrivilege === USER_PRIVILEGE.agent.tag;
+}
 
 // Igual que models.UserIsSuperUser: se compara el id del privilegio
 export function isSuperUser(user: User | null | undefined): boolean {

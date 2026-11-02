@@ -2,11 +2,16 @@ import { api } from './client';
 import type { ApiResult, VisibilityBody } from './types';
 import type { Condition } from '../models/condition';
 
-// Query params de GET /list/conditions (format_validates/list_format_validate.go -> ListSearchFormat)
+// Query params de GET /list/conditions (PaginationFormat + format_validates/list_format_validate.go ->
+// ListConditionsFormat). La sesion es opcional: sin sesion o sin privilegio solo lista activas e inactivas (pedir otro
+// status es 403 DVLIS008); el super usuario y el agente ven todas. Sin status lista todas las que puede ver
 export interface ListConditionsParams {
   limit?: number; // 1 a 100
   page?: number;
   search?: string; // literal, C-TRD lo escapa
+  // GENERIC_STATUS por tag; solo el super usuario (403 DVLIS006). No se envia junto con idStatus
+  tagStatus?: string;
+  idStatus?: string;
 }
 
 // `page` es el total de documentos que cumplen el filtro. Las mas recientes primero

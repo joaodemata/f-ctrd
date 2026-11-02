@@ -11,7 +11,7 @@ import { StatusBadge } from './StatusBadge';
 const DEFAULT_LIMIT = 10;
 
 // Valores con los que se configuro el callback (ej: umbrales); nada si no tiene
-function CallbackParametersList({ parameters }: { parameters: Condition['parametersCallback'] }) {
+export function CallbackParametersList({ parameters }: { parameters: Condition['parametersCallback'] }) {
   const entries = Object.entries(parameters ?? {});
   if (entries.length === 0) return null;
   return (

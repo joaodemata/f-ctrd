@@ -827,6 +827,24 @@ a {
 [data-status='OPPORTUNITY-CANCELED'] {
   --tone: var(--status-canceled);
 }
+/* Revision de lo que crean los agentes, cola de tesis y corridas */
+[data-status='STATUS-PENDING-FOR-APPROVE'],
+[data-status='THESIS-PENDING'],
+[data-status='RUN-NEEDS-INPUT'] {
+  --tone: var(--status-ongoing);
+}
+[data-status='STATUS-NOT-APPROVED'],
+[data-status='RUN-FAILED'] {
+  --tone: var(--status-canceled);
+}
+[data-status='THESIS-PROCESSING'],
+[data-status='RUN-RUNNING'] {
+  --tone: var(--status-finished);
+}
+[data-status='THESIS-PROCESSED'],
+[data-status='RUN-SUCCESS'] {
+  --tone: var(--status-active);
+}
 
 /* Sin --tone propio: un --tone aqui pisaria al de [data-status] (misma especificidad, va despues) */
 .status-badge {
@@ -854,7 +872,9 @@ a {
 /* Estados vivos (oportunidad activa o en curso, condicion cumplida): el punto late */
 .status-badge[data-status='OPPORTUNITY-ACTIVE']::before,
 .status-badge[data-status='OPPORTUNITY-ONGOING']::before,
-.status-badge[data-status='STATUS-ACTIVE']::before {
+.status-badge[data-status='STATUS-ACTIVE']::before,
+.status-badge[data-status='THESIS-PROCESSING']::before,
+.status-badge[data-status='RUN-RUNNING']::before {
   animation: pulse 1.8s ease-out infinite;
 }
 
@@ -1294,6 +1314,113 @@ a {
   font-size: 0.9rem;
 }
 
+/* Agentes: tesis, pasos de una corrida y revision */
+
+.thesis-text {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* En el listado de corridas la tesis completa va en el detalle */
+.thesis-text--clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.run-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.run-step {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--status-canceled);
+  background: var(--surface);
+}
+
+.run-step[data-accepted='true'] {
+  border-left-color: var(--status-active);
+}
+
+.run-step__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.run-step__result {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--status-canceled);
+}
+
+.run-step__result--ok {
+  color: var(--status-active);
+}
+
+.run-step__problems {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  font-size: 0.9rem;
+}
+
+.run-step__output {
+  margin-top: 6px;
+}
+
+.run-step__output summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.run-error {
+  margin: 4px 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: var(--danger-text);
+}
+
+.review-buttons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.button--danger {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.button--danger:hover:not(:disabled) {
+  border-color: var(--status-canceled);
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.cell--actions {
+  white-space: nowrap;
+}
+
+.textarea--code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
 /* Versiones de un trigger */
 
 .versions {
@@ -1691,8 +1818,13 @@ a {
   }
 
   .table--cards .cell--main,
+  .table--cards .cell--actions,
   .table--cards-single td {
     grid-column: 1 / -1;
+  }
+
+  .table--cards .cell--actions {
+    white-space: normal;
   }
 
   .table--cards .cell--toggle {

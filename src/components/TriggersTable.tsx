@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { previousTriggerId, type Trigger } from '../models/trigger';
 import { visibilityLabel } from '../models/visibility';
 import { formatDateTime } from '../utils/format';
@@ -7,16 +7,25 @@ import { TriggerDetail } from './TriggerDetail';
 
 interface TriggersTableProps {
   triggers: Trigger[];
-  onEdit: (trigger: Trigger) => void;
+  // Sin onEdit el detalle no ofrece editar
+  onEdit?: (trigger: Trigger) => void;
+  // Acciones extra en el detalle de cada trigger (ej: aprobar o rechazar)
+  detailActions?: (trigger: Trigger) => ReactNode;
+  emptyMessage?: string;
 }
 
 const COLUMN_COUNT = 8;
 
-export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
+export function TriggersTable({
+  triggers,
+  onEdit,
+  detailActions,
+  emptyMessage = 'No hay triggers con estos filtros.',
+}: TriggersTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (triggers.length === 0) {
-    return <p className="empty">No hay triggers con estos filtros.</p>;
+    return <p className="empty">{emptyMessage}</p>;
   }
 
   return (
@@ -73,7 +82,7 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
                 {expanded && (
                   <tr className="table__detail">
                     <td colSpan={COLUMN_COUNT}>
-                      <TriggerDetail trigger={trigger} onEdit={onEdit} />
+                      <TriggerDetail trigger={trigger} onEdit={onEdit} actions={detailActions?.(trigger)} />
                     </td>
                   </tr>
                 )}
