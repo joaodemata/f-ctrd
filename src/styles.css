@@ -2034,6 +2034,9 @@ a {
     -webkit-print-color-adjust: exact;
   }
 
+  /* Lo que extensiones del navegador inyectan fuera de la app (botones flotantes, etc.) no va al PDF */
+  html > :not(head, body),
+  body > :not(#root),
   .backdrop,
   .topbar,
   .help-head,
