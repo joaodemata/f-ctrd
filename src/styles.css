@@ -98,8 +98,9 @@ body {
   width: 70vmax;
   height: 70vmax;
   border-radius: 50%;
-  filter: blur(90px);
+  /* El degradado radial ya es difuso; un filter: blur sobre 70vmax era una capa enorme y costosa */
   opacity: 0.16;
+  will-change: transform;
 }
 
 .backdrop::before {
@@ -208,8 +209,7 @@ p {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   border-bottom: 1px solid var(--border);
 }
 
@@ -588,8 +588,8 @@ p {
 }
 
 .panel {
+  /* Sin backdrop-filter: sobre el canvas animado obligaba a re-difuminar todo el panel en cada frame (RAM/GPU) */
   background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(6px);
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: var(--shadow);
