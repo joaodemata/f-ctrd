@@ -1633,6 +1633,74 @@ a {
   font-size: 11px;
 }
 
+/* Guia extendida de la ayuda (HelpGuide.tsx) */
+
+.help-pdf-hint {
+  margin: -8px 0 0;
+}
+
+.help-more {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.help-more > summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.help-more__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.help-more .help-card {
+  background: var(--surface);
+}
+
+.code-block--tall {
+  max-height: 420px;
+}
+
+/* Linea de tiempo del caso completo */
+.help-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--border);
+  display: grid;
+  gap: 12px;
+}
+
+.help-timeline li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+}
+
+.help-timeline li::before {
+  content: '';
+  position: absolute;
+  left: -21px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.help-timeline__time {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Pagination */
 
 .pagination {
@@ -1891,5 +1959,96 @@ a {
 
   .help-diagram .help-diagram__compact {
     display: block;
+  }
+}
+
+/* Impresion / PDF de la ayuda: sin fondo animado ni barra, colores claros y cajas que no se cortan entre paginas */
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f4f6f8;
+    --border: #d0d7de;
+    --text: #1b1f24;
+    --muted: #4b5563;
+    --accent: #1f6feb;
+    --status-ongoing: #b26b00;
+    --status-active: #1a7f37;
+    --status-finished: #1f6feb;
+    --status-expired: #6e7781;
+    --status-canceled: #cf222e;
+    --status-inactive: #d15704;
+    --shadow: none;
+    color-scheme: light;
+    font-size: 11pt;
+  }
+
+  @page {
+    margin: 14mm 12mm;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  .backdrop,
+  .topbar,
+  .help-index,
+  .help-pdf,
+  .help-pdf-hint {
+    display: none !important;
+  }
+
+  .page {
+    max-width: none;
+    padding: 0;
+    animation: none;
+  }
+
+  .panel {
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .help-section > h2 {
+    break-after: avoid;
+  }
+
+  .help-card,
+  .help-pipeline li,
+  .help-timeline li,
+  .help-faq dd,
+  .code-block,
+  .help-diagram,
+  tr {
+    break-inside: avoid;
+  }
+
+  .code-block {
+    max-height: none;
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .help-more > summary {
+    list-style: none;
+    color: var(--text);
+  }
+
+  .help-more > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .help-diagram svg {
+    min-width: 0;
+  }
+
+  /* En papel el enlace no se puede clicar: se imprime la URL */
+  .help-external::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    color: var(--muted);
+    overflow-wrap: anywhere;
   }
 }
