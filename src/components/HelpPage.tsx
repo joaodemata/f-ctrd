@@ -1,14 +1,5 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { listApis } from '../api/apis';
-import {
-  ConditionExamples,
-  LinksGuide,
-  MORE_TRIGGER_EXAMPLES,
-  More,
-  OtherSourcesGuide,
-  TradingViewGuide,
-  WalkthroughGuide,
-} from './HelpGuide';
 import { listCallbacks } from '../api/callbacks';
 import { listCatalogs } from '../api/catalogs';
 import { apiBaseUrl } from '../api/config';
@@ -19,6 +10,16 @@ import { CatalogType } from '../models/catalog';
 import { OpportunityStatusTag } from '../models/opportunity';
 import { parameterRangeText } from './ApiParameterInput';
 import { ErrorBanner } from './ErrorBanner';
+import {
+  ConditionExamples,
+  LinksGuide,
+  MORE_TRIGGER_EXAMPLES,
+  More,
+  OtherSourcesGuide,
+  TradingViewGuide,
+  WalkthroughGuide,
+} from './HelpGuide';
+import { SeedwiseLogo } from './SeedwiseLogo';
 import { StatusBadge } from './StatusBadge';
 
 // Ayuda funcional de C-TRD. Lo que se explica aqui sale del codigo de C-TRD (controllers/hook.controller.go,
@@ -50,21 +51,59 @@ function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// PDF sin dependencias: abre la ventana de impresion del navegador ("Guardar como PDF") con los estilos de @media print.
-// Antes abre todos los <details> para que el PDF tenga la guia completa y despues los deja como estaban. El titulo
-// del documento es el nombre de archivo que sugiere el navegador
-function downloadPdf() {
-  const closed = [...document.querySelectorAll<HTMLDetailsElement>('.help details:not([open])')];
-  const previousTitle = document.title;
-  closed.forEach((details) => (details.open = true));
-  document.title = 'seedwise-ayuda';
-  const restore = () => {
-    closed.forEach((details) => (details.open = false));
-    document.title = previousTitle;
-    window.removeEventListener('afterprint', restore);
-  };
-  window.addEventListener('afterprint', restore);
-  window.print();
+// PDF sin dependencias: la ventana de impresion del navegador ("Guardar como PDF") con los estilos de @media print.
+// Al imprimir (boton o Ctrl+P) se abren todos los <details> para que el PDF tenga la guia completa y despues quedan
+// como estaban. El titulo del documento es el nombre de archivo que sugiere el navegador
+function usePrintableGuide() {
+  useEffect(() => {
+    let opened: HTMLDetailsElement[] = [];
+    let previousTitle = document.title;
+    const before = () => {
+      opened = [...document.querySelectorAll<HTMLDetailsElement>('.help details:not([open])')];
+      opened.forEach((details) => (details.open = true));
+      previousTitle = document.title;
+      document.title = `seedwise-ayuda-${new Date().toISOString().slice(0, 10)}`;
+    };
+    const after = () => {
+      opened.forEach((details) => (details.open = false));
+      opened = [];
+      document.title = previousTitle;
+    };
+    window.addEventListener('beforeprint', before);
+    window.addEventListener('afterprint', after);
+    return () => {
+      window.removeEventListener('beforeprint', before);
+      window.removeEventListener('afterprint', after);
+    };
+  }, []);
+}
+
+// Portada e indice: solo se ven en el PDF (el indice de botones no sirve en papel)
+function PrintCover() {
+  const today = new Date().toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' });
+  return (
+    <header className="help-cover">
+      <div className="help-cover__brand">
+        <SeedwiseLogo className="help-cover__logo" />
+        <span>seedwise.io</span>
+      </div>
+      <h1>Guia de uso</h1>
+      <p className="tagline">Invierte como jardinero, no como apostador.</p>
+      <p className="muted">
+        Triggers, condiciones, oportunidades, TradingView, n8n y agentes de IA. Generada el {today} desde{' '}
+        <code>{apiBaseUrl}</code>; los catalogos son los vigentes en ese momento.
+      </p>
+      <h2>Contenido</h2>
+      <ol className="help-cover__toc">
+        {SECTIONS.map((section) => (
+          // En el PDF el ancla es un enlace interno a la seccion (en pantalla la portada no se muestra)
+          <li key={section.id}>
+            <a href={`#${section.id}`}>{section.label}</a>
+          </li>
+        ))}
+      </ol>
+    </header>
+  );
 }
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
@@ -106,9 +145,11 @@ function SectionLink({ id, children }: { id: string; children: ReactNode }) {
 }
 
 export function HelpPage() {
+  usePrintableGuide();
   return (
     <main className="page page--narrow help">
-      <div className="page__head">
+      <PrintCover />
+      <div className="page__head help-head">
         <div>
           <h1>Ayuda</h1>
           <p className="tagline">Invierte como jardinero, no como apostador.</p>
@@ -116,7 +157,7 @@ export function HelpPage() {
             Como nace una oportunidad, como la mueven las condiciones y como combinarlas para armar senales.
           </p>
         </div>
-        <button type="button" className="button help-pdf" onClick={downloadPdf}>
+        <button type="button" className="button help-pdf" onClick={() => window.print()}>
           Descargar PDF
         </button>
       </div>
