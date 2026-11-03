@@ -7,6 +7,7 @@ const SPEED = 8; // px por segundo
 const MA_PERIOD = 10;
 const GRID_EVERY = 8; // una linea vertical cada N velas
 const BASE_PRICE = 100;
+const FPS = 15; // redibujos por segundo del fondo
 
 interface Candle {
   open: number;
@@ -168,7 +169,10 @@ export function MarketBackdrop() {
     };
 
     const tick = (time: number) => {
-      const elapsed = Math.min((time - lastTime) / 1000, 0.1);
+      frame = requestAnimationFrame(tick);
+      // A 8 px/s no hace falta redibujar a 60 fps: se limita a FPS para no cargar la GPU
+      if (time - lastTime < 1000 / FPS) return;
+      const elapsed = Math.min((time - lastTime) / 1000, 0.25);
       lastTime = time;
       offset += SPEED * elapsed;
       while (offset >= CANDLE_STEP) {
@@ -178,7 +182,6 @@ export function MarketBackdrop() {
         fill();
       }
       draw();
-      frame = requestAnimationFrame(tick);
     };
 
     const stop = () => cancelAnimationFrame(frame);

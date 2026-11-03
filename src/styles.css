@@ -98,8 +98,9 @@ body {
   width: 70vmax;
   height: 70vmax;
   border-radius: 50%;
-  filter: blur(90px);
+  /* El degradado radial ya es difuso; un filter: blur sobre 70vmax era una capa enorme y costosa */
   opacity: 0.16;
+  will-change: transform;
 }
 
 .backdrop::before {
@@ -208,8 +209,7 @@ p {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   border-bottom: 1px solid var(--border);
 }
 
@@ -588,8 +588,8 @@ p {
 }
 
 .panel {
+  /* Sin backdrop-filter: sobre el canvas animado obligaba a re-difuminar todo el panel en cada frame (RAM/GPU) */
   background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(6px);
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: var(--shadow);
@@ -1633,6 +1633,74 @@ a {
   font-size: 11px;
 }
 
+/* Guia extendida de la ayuda (HelpGuide.tsx) */
+
+.help-pdf-hint {
+  margin: -8px 0 0;
+}
+
+.help-more {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.help-more > summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.help-more__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.help-more .help-card {
+  background: var(--surface);
+}
+
+.code-block--tall {
+  max-height: 420px;
+}
+
+/* Linea de tiempo del caso completo */
+.help-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--border);
+  display: grid;
+  gap: 12px;
+}
+
+.help-timeline li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+}
+
+.help-timeline li::before {
+  content: '';
+  position: absolute;
+  left: -21px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.help-timeline__time {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Pagination */
 
 .pagination {
@@ -1891,5 +1959,272 @@ a {
 
   .help-diagram .help-diagram__compact {
     display: block;
+  }
+}
+
+/* Portada del PDF de la ayuda: solo en impresion */
+.help-cover {
+  display: none;
+}
+
+/* Impresion / PDF de la ayuda. Las secciones pasan de grid a bloque: Chrome no corta bien un grid entre paginas
+   (el texto se superpone y quedan paginas casi vacias). Sin fondo animado, barra ni paneles: parece un documento */
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f4f6f8;
+    --border: #d0d7de;
+    --text: #1b1f24;
+    --muted: #4b5563;
+    --accent: #1f6feb;
+    --status-ongoing: #b26b00;
+    --status-active: #1a7f37;
+    --status-finished: #1f6feb;
+    --status-expired: #6e7781;
+    --status-canceled: #cf222e;
+    --status-inactive: #d15704;
+    --brand-leaf: #2f9e44;
+    --brand-coin: #e8b923;
+    --brand-coin-text: #6b4e00;
+    --brand-soil: #8a6a4a;
+    --shadow: none;
+    color-scheme: light;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  @page {
+    size: A4;
+    margin: 16mm 14mm 18mm;
+
+    @bottom-left {
+      content: 'seedwise.io · Guia de uso';
+      font: 8pt system-ui, sans-serif;
+      color: #6b7280;
+    }
+
+    @bottom-right {
+      content: counter(page) ' / ' counter(pages);
+      font: 8pt system-ui, sans-serif;
+      color: #6b7280;
+    }
+  }
+
+  @page :first {
+    @bottom-left {
+      content: none;
+    }
+
+    @bottom-right {
+      content: none;
+    }
+  }
+
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  body {
+    background: #ffffff;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .backdrop,
+  .topbar,
+  .help-head,
+  .help-index,
+  .help-pdf-hint {
+    display: none !important;
+  }
+
+  /* Portada con indice, sola en la primera pagina */
+  .help-cover {
+    display: block;
+    break-after: page;
+    padding-top: 30mm;
+  }
+
+  .help-cover__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--brand-leaf);
+  }
+
+  .help-cover__logo {
+    width: 56px;
+    height: 56px;
+  }
+
+  .help-cover h1 {
+    margin: 18mm 0 4px;
+    font-size: 2.4rem;
+  }
+
+  .help-cover .tagline {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+
+  .help-cover h2 {
+    margin: 14mm 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--brand-leaf);
+  }
+
+  .help-cover__toc {
+    margin: 0;
+    padding-left: 1.6em;
+    columns: 2;
+    column-gap: 12mm;
+    line-height: 1.9;
+  }
+
+  .help-cover__toc a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .page,
+  .help-section,
+  .help-more__body {
+    display: block;
+    max-width: none;
+    padding: 0;
+  }
+
+  .help-section > * + *,
+  .help-more__body > * + * {
+    margin-top: 8px;
+  }
+
+  /* Secciones como capitulos: sin caja, titulo con linea de color */
+  .panel {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .help-section {
+    margin-top: 10mm;
+  }
+
+  .help-section > h2 {
+    font-size: 1.35rem;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--brand-leaf);
+    break-after: avoid;
+  }
+
+  .help h3 {
+    margin-top: 12px;
+    break-after: avoid;
+  }
+
+  .help-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .help-pipeline {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .help-card,
+  .help-pipeline li,
+  .help-timeline li,
+  .help-faq dt,
+  .code-block,
+  .help-diagram,
+  .kv dt,
+  tr {
+    break-inside: avoid;
+  }
+
+  .help-faq dt {
+    break-after: avoid;
+  }
+
+  .table-wrap {
+    overflow: visible;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  .code-block {
+    max-height: none;
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 8pt;
+  }
+
+  /* Los bloques plegados se imprimen abiertos, como subsecciones */
+  .help-more {
+    border: 0;
+    background: none;
+    margin-top: 10px;
+  }
+
+  .help-more::details-content {
+    content-visibility: visible;
+  }
+
+  .help-more > summary {
+    display: block;
+    list-style: none;
+    padding: 0 0 4px;
+    font-size: 1rem;
+    color: var(--text);
+    break-after: avoid;
+  }
+
+  .help-more > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .help-more__body {
+    padding: 0;
+  }
+
+  .help-more .help-card {
+    background: var(--surface-2);
+  }
+
+  .help-diagram svg {
+    min-width: 0;
+  }
+
+  .help-diagram .help-diagram__wide {
+    display: block;
+  }
+
+  .help-diagram .help-diagram__compact {
+    display: none;
+  }
+
+  /* En papel el enlace externo muestra la URL; los enlaces internos de la app no sirven y se ven como texto */
+  .help-external::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .help a:not(.help-external) {
+    color: inherit;
+    text-decoration: none;
   }
 }

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { listApis } from '../api/apis';
 import { listCallbacks } from '../api/callbacks';
 import { listCatalogs } from '../api/catalogs';
@@ -10,30 +10,100 @@ import { CatalogType } from '../models/catalog';
 import { OpportunityStatusTag } from '../models/opportunity';
 import { parameterRangeText } from './ApiParameterInput';
 import { ErrorBanner } from './ErrorBanner';
+import {
+  ConditionExamples,
+  LinksGuide,
+  MORE_TRIGGER_EXAMPLES,
+  More,
+  OtherSourcesGuide,
+  TradingViewGuide,
+  WalkthroughGuide,
+} from './HelpGuide';
+import { SeedwiseLogo } from './SeedwiseLogo';
 import { StatusBadge } from './StatusBadge';
 
 // Ayuda funcional de C-TRD. Lo que se explica aqui sale del codigo de C-TRD (controllers/hook.controller.go,
 // data_validates/hook_data_validate.go, data_validates/operation_data_validate.go, cronjobs/check_conditions.go,
-// cronjobs/check_opportunities.go, providers/callbacks.go, models/catalogs_model.go -> VisibleToUserFilter); si cambia
-// alli, revisar
+// cronjobs/check_opportunities.go, providers/callbacks.go, models/catalogs_model.go -> VisibleToUserFilter,
+// data_validates/list_data_validate.go -> status de condiciones); si cambia alli, revisar. La guia extendida
+// (TradingView, n8n, ejemplos, enlaces) esta en HelpGuide.tsx
 
 const SECTIONS = [
   { id: 'ayuda-resumen', label: 'Como encaja todo' },
   { id: 'ayuda-ciclo', label: 'Ciclo de vida' },
   { id: 'ayuda-triggers', label: 'Triggers y alertas' },
+  { id: 'ayuda-tradingview', label: 'TradingView' },
+  { id: 'ayuda-origenes', label: 'n8n y otros origenes' },
   { id: 'ayuda-visibilidad', label: 'Usuarios y visibilidad' },
   { id: 'ayuda-cancelar', label: 'Cancelar' },
   { id: 'ayuda-condiciones', label: 'Condiciones' },
   { id: 'ayuda-callbacks', label: 'Callbacks' },
   { id: 'ayuda-senales', label: 'Senales complejas' },
   { id: 'ayuda-recetas', label: 'Ejemplos' },
+  { id: 'ayuda-recorrido', label: 'Caso completo' },
   { id: 'ayuda-agentes', label: 'Agentes de IA' },
   { id: 'ayuda-problemas', label: 'Problemas frecuentes' },
+  { id: 'ayuda-enlaces', label: 'Enlaces y glosario' },
 ] as const;
 
 // El hash ya lo usa la navegacion (#/ayuda), asi que el indice hace scroll en lugar de usar anclas
 function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// PDF sin dependencias: la ventana de impresion del navegador ("Guardar como PDF") con los estilos de @media print.
+// Al imprimir (boton o Ctrl+P) se abren todos los <details> para que el PDF tenga la guia completa y despues quedan
+// como estaban. El titulo del documento es el nombre de archivo que sugiere el navegador
+function usePrintableGuide() {
+  useEffect(() => {
+    let opened: HTMLDetailsElement[] = [];
+    let previousTitle = document.title;
+    const before = () => {
+      opened = [...document.querySelectorAll<HTMLDetailsElement>('.help details:not([open])')];
+      opened.forEach((details) => (details.open = true));
+      previousTitle = document.title;
+      document.title = `seedwise-ayuda-${new Date().toISOString().slice(0, 10)}`;
+    };
+    const after = () => {
+      opened.forEach((details) => (details.open = false));
+      opened = [];
+      document.title = previousTitle;
+    };
+    window.addEventListener('beforeprint', before);
+    window.addEventListener('afterprint', after);
+    return () => {
+      window.removeEventListener('beforeprint', before);
+      window.removeEventListener('afterprint', after);
+    };
+  }, []);
+}
+
+// Portada e indice: solo se ven en el PDF (el indice de botones no sirve en papel)
+function PrintCover() {
+  const today = new Date().toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' });
+  return (
+    <header className="help-cover">
+      <div className="help-cover__brand">
+        <SeedwiseLogo className="help-cover__logo" />
+        <span>seedwise.io</span>
+      </div>
+      <h1>Guia de uso</h1>
+      <p className="tagline">Invierte como jardinero, no como apostador.</p>
+      <p className="muted">
+        Triggers, condiciones, oportunidades, TradingView, n8n y agentes de IA. Generada el {today} desde{' '}
+        <code>{apiBaseUrl}</code>; los catalogos son los vigentes en ese momento.
+      </p>
+      <h2>Contenido</h2>
+      <ol className="help-cover__toc">
+        {SECTIONS.map((section) => (
+          // En el PDF el ancla es un enlace interno a la seccion (en pantalla la portada no se muestra)
+          <li key={section.id}>
+            <a href={`#${section.id}`}>{section.label}</a>
+          </li>
+        ))}
+      </ol>
+    </header>
+  );
 }
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
@@ -75,9 +145,11 @@ function SectionLink({ id, children }: { id: string; children: ReactNode }) {
 }
 
 export function HelpPage() {
+  usePrintableGuide();
   return (
     <main className="page page--narrow help">
-      <div className="page__head">
+      <PrintCover />
+      <div className="page__head help-head">
         <div>
           <h1>Ayuda</h1>
           <p className="tagline">Invierte como jardinero, no como apostador.</p>
@@ -85,7 +157,14 @@ export function HelpPage() {
             Como nace una oportunidad, como la mueven las condiciones y como combinarlas para armar senales.
           </p>
         </div>
+        <button type="button" className="button help-pdf" onClick={() => window.print()}>
+          Descargar PDF
+        </button>
       </div>
+      <p className="muted small help-pdf-hint">
+        El PDF incluye la guia completa (los bloques plegados se abren). En la ventana de impresion elige{' '}
+        <em>Guardar como PDF</em>.
+      </p>
 
       <nav className="help-index" aria-label="En esta pagina">
         {SECTIONS.map((section) => (
@@ -99,7 +178,10 @@ export function HelpPage() {
         <ol className="help-pipeline">
           <li>
             <strong>Trigger</strong>
-            <span>La senal tecnica: una alerta de TradingView sobre un asset, con una accion (compra, venta…).</span>
+            <span>
+              La senal tecnica: una alerta de TradingView (o de n8n, un script…) sobre un asset, con una accion (compra,
+              venta…).
+            </span>
           </li>
           <li>
             <strong>Oportunidad</strong>
@@ -229,7 +311,9 @@ export function HelpPage() {
       <Section id="ayuda-triggers" title="Triggers y alertas de TradingView">
         <p>
           Un trigger define el asset, la accion, la temporalidad de vela, el maximo de velas y, opcionalmente, una lista
-          de condiciones. Para que funcione hay que crear una alerta en TradingView que llame al webhook:
+          de condiciones. Para que funcione hay que crear una alerta en TradingView (ver{' '}
+          <SectionLink id="ayuda-tradingview">TradingView</SectionLink>) u otro sistema (ver{' '}
+          <SectionLink id="ayuda-origenes">n8n y otros origenes</SectionLink>) que llame al webhook:
         </p>
         <dl className="kv kv--wide">
           <dt>Webhook</dt>
@@ -270,6 +354,14 @@ export function HelpPage() {
         </ul>
       </Section>
 
+      <Section id="ayuda-tradingview" title="Que es TradingView y como conectarlo">
+        <TradingViewGuide />
+      </Section>
+
+      <Section id="ayuda-origenes" title="Otros origenes: n8n, scripts y alertas manuales">
+        <OtherSourcesGuide />
+      </Section>
+
       <Section id="ayuda-visibilidad" title="Usuarios y visibilidad">
         <p>
           La sesion es opcional. Solo el <strong>super usuario</strong> crea y edita triggers, crea condiciones y sube
@@ -297,7 +389,11 @@ export function HelpPage() {
             Los triggers y oportunidades creados antes de los usuarios no tienen visibilidad: esas oportunidades no las
             ve nadie, y las nuevas de esos triggers tampoco.
           </li>
-          <li>Hoy solo las oportunidades se filtran por visibilidad; los listados de triggers y condiciones muestran todo.</li>
+          <li>
+            Hoy solo las oportunidades se filtran por visibilidad; los listados de triggers y condiciones no. Las
+            condiciones si se filtran por estado: sin sesion o sin privilegio solo se ven las Activas e Inactivas; las
+            pendientes de aprobacion y las no aprobadas solo las ve el super usuario.
+          </li>
         </ul>
       </Section>
 
@@ -376,6 +472,7 @@ export function HelpPage() {
             para todos.
           </li>
         </ul>
+        <ConditionExamples />
       </Section>
 
       <Section id="ayuda-callbacks" title="Callbacks: como se relacionan con las condiciones">
@@ -403,8 +500,13 @@ export function HelpPage() {
             usarse para "en subida" o "en bajada", y con distintos parametros (otra serie).
           </li>
           <li>
-            Los umbrales estan fijos en cada callback (ej: Polymarket 60% o mas). Un umbral distinto o una logica nueva
-            requiere agregar un callback en C-TRD.
+            Algunos callbacks tienen <strong>parametros</strong> que se fijan en cada condicion: los de umbral de Fear and
+            Greed y de dominancia (BTC, USDT, OTHERS2, OTHERS3) reciben el umbral, con su rango validado al crearla. Asi
+            "Fear and Greed menor a 25" y "menor a 15" son dos condiciones con el mismo callback.
+          </li>
+          <li>
+            Los demas tienen el umbral fijo (ej: Polymarket 60% o mas, bandas de Fear and Greed). Un umbral fijo
+            distinto o una logica nueva requiere agregar un callback en C-TRD.
           </li>
         </ul>
         <h3>Callbacks disponibles por API</h3>
@@ -492,6 +594,17 @@ export function HelpPage() {
             idea="Un put/call extremo suele marcar exceso de cobertura o de euforia: confirma que el soporte es relevante."
           />
         </div>
+        <More title="Mas ejemplos (umbrales, macro, n8n y sin condiciones)">
+          <div className="help-grid">
+            {MORE_TRIGGER_EXAMPLES.map((example) => (
+              <Recipe key={example.title} {...example} />
+            ))}
+          </div>
+        </More>
+      </Section>
+
+      <Section id="ayuda-recorrido" title="Un caso completo, minuto a minuto">
+        <WalkthroughGuide />
       </Section>
 
       <Section id="ayuda-agentes" title="Agentes de IA">
@@ -567,6 +680,12 @@ export function HelpPage() {
             activa para cancelar": ya se cerro (vencio o se cancelo antes) o la alerta usa el id de una version vieja del
             trigger.
           </dd>
+          <dt>TradingView dispara la alerta pero C-TRD no recibe nada</dt>
+          <dd>
+            Revisa la columna <em>Webhook status</em> del registro de alertas. La URL tiene que ser la publica del entorno
+            (https, puerto 80 o 443; <code>localhost</code> no sirve), la cuenta necesita un plan con webhooks y 2FA
+            activado, y el mensaje tiene que ser JSON valido (cuidado con comillas y comas al editarlo a mano).
+          </dd>
           <dt>La condicion de Google Trends no cambia</dt>
           <dd>
             Lee el ultimo CSV subido para el asset. Sube uno nuevo en <a href="#/google-trends">Google Trends</a> para
@@ -579,32 +698,46 @@ export function HelpPage() {
           </dd>
         </dl>
       </Section>
+
+      <Section id="ayuda-enlaces" title="Enlaces utiles y glosario">
+        <LinksGuide />
+      </Section>
     </main>
   );
 }
 
 interface RecipeProps {
   title: string;
+  source?: string;
   trigger: string;
   conditions: string[];
   idea: string;
 }
 
-function Recipe({ title, trigger, conditions, idea }: RecipeProps) {
+function Recipe({ title, source = 'TradingView', trigger, conditions, idea }: RecipeProps) {
   return (
     <div className="help-card">
       <h3>{title}</h3>
+      <p className="muted small">Origen: {source}</p>
       <p>
         <strong>Trigger:</strong> {trigger}
       </p>
-      <p>
-        <strong>Condiciones (todas):</strong>
-      </p>
-      <ul className="help-list">
-        {conditions.map((condition) => (
-          <li key={condition}>{condition}</li>
-        ))}
-      </ul>
+      {conditions.length === 0 ? (
+        <p>
+          <strong>Condiciones:</strong> ninguna, nace Activa.
+        </p>
+      ) : (
+        <>
+          <p>
+            <strong>Condiciones (todas):</strong>
+          </p>
+          <ul className="help-list">
+            {conditions.map((condition) => (
+              <li key={condition}>{condition}</li>
+            ))}
+          </ul>
+        </>
+      )}
       <p className="muted small">{idea}</p>
     </div>
   );
