@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import type { ApiError } from '../api/errors';
 import type { TriggerFields } from '../api/triggers';
 import type { VisibilityBody } from '../api/types';
+import { TRIGGER_CODE_WEBHOOK_PLACEHOLDER } from '../models/agent';
 import { CatalogType, TIMEFRAME_MINUTES, type Catalog } from '../models/catalog';
 import type { Trigger } from '../models/trigger';
 import { formatDuration } from '../utils/format';
@@ -22,6 +23,9 @@ import {
 
 type CatalogOption = Pick<Catalog, 'id' | 'tag' | 'name'>;
 
+// Limite del codigo en C-TRD (CreateTriggerFormat.Code: max=65536)
+const MAX_CODE_BYTES = 65536;
+
 export interface TriggerFormValues {
   tag: string;
   name: string;
@@ -31,6 +35,8 @@ export interface TriggerFormValues {
   timeframe: CatalogOption | null;
   maxCandlestickQty: string;
   conditions: ConditionOption[];
+  // Codigo del sistema externo (Pine). Vacio no se envia: al crear queda sin codigo y al editar se conserva
+  code: string;
   // Solo al crear: al actualizar C-TRD conserva la visibilidad del trigger anterior
   visibility: VisibilityFormValues;
 }
@@ -44,6 +50,7 @@ export const EMPTY_TRIGGER_FORM: TriggerFormValues = {
   timeframe: null,
   maxCandlestickQty: '',
   conditions: [],
+  code: '',
   visibility: EMPTY_VISIBILITY_FORM,
 };
 
@@ -65,6 +72,7 @@ export function triggerFormValues(trigger: Trigger): TriggerFormValues {
       id: condition.idCondition,
       name: condition.nameCondition,
     })),
+    code: trigger.pineCode ?? '',
     visibility: EMPTY_VISIBILITY_FORM,
   };
 }
@@ -82,6 +90,7 @@ function validate(values: TriggerFormValues): FieldErrors {
   if (!values.timeframe) errors.idCandlestickTimeframe = 'Elige una temporalidad.';
   const qty = Number(values.maxCandlestickQty);
   if (!Number.isInteger(qty) || qty <= 0) errors.maxCandlestickQty = 'Debe ser un numero entero mayor a 0.';
+  if (new TextEncoder().encode(values.code).length > MAX_CODE_BYTES) errors.code = 'El codigo no puede superar 64 KB.';
   return errors;
 }
 
@@ -104,6 +113,8 @@ interface TriggerFormProps {
   onCancel: () => void;
   // Aviso antes de los botones (ej: que implica actualizar)
   notice?: ReactNode;
+  // Texto extra bajo el codigo (ej: al editar, que vacio lo conserva)
+  codeHint?: ReactNode;
 }
 
 // Campos de un trigger, compartidos por el alta (TriggerPage) y la edicion (TriggersPage). El padre remonta el
@@ -118,6 +129,7 @@ export function TriggerForm({
   cancelLabel,
   onCancel,
   notice,
+  codeHint,
   withVisibility = false,
 }: TriggerFormProps) {
   const [values, setValues] = useState<TriggerFormValues>(initialValues);
@@ -156,6 +168,7 @@ export function TriggerForm({
       idCandlestickTimeframe: values.timeframe.id,
       maxCandlestickQty: Number(values.maxCandlestickQty),
       conditions: values.conditions.map((condition) => condition.id),
+      ...(values.code.trim() ? { code: values.code } : {}),
     };
     onSubmit(fields, withVisibility ? visibilityBody(values.visibility) : null);
   };
@@ -252,6 +265,26 @@ export function TriggerForm({
         }
       >
         <ConditionPicker value={values.conditions} onChange={(conditions) => set('conditions', conditions)} />
+      </FormField>
+
+      <FormField
+        label="Codigo (Pine de TradingView)"
+        error={fieldError('code')}
+        hint={
+          <>
+            Opcional. <code>{TRIGGER_CODE_WEBHOOK_PLACEHOLDER}</code> se reemplaza por el ID del webhook al guardar.
+            {codeHint && <> {codeHint}</>}
+          </>
+        }
+      >
+        <textarea
+          className="textarea--code"
+          value={values.code}
+          onChange={(event) => set('code', event.target.value)}
+          rows={6}
+          spellCheck={false}
+          aria-invalid={!!fieldError('code')}
+        />
       </FormField>
 
       {withVisibility && (

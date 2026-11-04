@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { previousTriggerId, type Trigger } from '../models/trigger';
 import { visibilityLabel } from '../models/visibility';
 import { formatDateTime } from '../utils/format';
@@ -7,21 +7,30 @@ import { TriggerDetail } from './TriggerDetail';
 
 interface TriggersTableProps {
   triggers: Trigger[];
-  onEdit: (trigger: Trigger) => void;
+  // Sin onEdit el detalle no ofrece editar
+  onEdit?: (trigger: Trigger) => void;
+  // Acciones extra en el detalle de cada trigger (ej: aprobar o rechazar)
+  detailActions?: (trigger: Trigger) => ReactNode;
+  emptyMessage?: string;
 }
 
 const COLUMN_COUNT = 8;
 
-export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
+export function TriggersTable({
+  triggers,
+  onEdit,
+  detailActions,
+  emptyMessage = 'No hay triggers con estos filtros.',
+}: TriggersTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (triggers.length === 0) {
-    return <p className="empty">No hay triggers con estos filtros.</p>;
+    return <p className="empty">{emptyMessage}</p>;
   }
 
   return (
     <div className="table-wrap">
-      <table className="table">
+      <table className="table table--cards">
         <thead>
           <tr>
             <th scope="col" aria-label="Expandir" />
@@ -40,7 +49,7 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
             return (
               <Fragment key={trigger.id}>
                 <tr className="table__row" data-expanded={expanded}>
-                  <td>
+                  <td className="cell--toggle">
                     <button
                       type="button"
                       className="icon-button"
@@ -51,7 +60,7 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
                       {expanded ? '▾' : '▸'}
                     </button>
                   </td>
-                  <td>
+                  <td className="cell--main">
                     <strong>{trigger.name}</strong>
                     <div className="muted small">
                       {trigger.tag}
@@ -59,21 +68,21 @@ export function TriggersTable({ triggers, onEdit }: TriggersTableProps) {
                       {` · ${visibilityLabel(trigger)}`}
                     </div>
                   </td>
-                  <td>{trigger.asset || trigger.tagAsset}</td>
-                  <td>{trigger.action || trigger.tagAction}</td>
-                  <td>
+                  <td data-label="Asset">{trigger.asset || trigger.tagAsset}</td>
+                  <td data-label="Accion">{trigger.action || trigger.tagAction}</td>
+                  <td data-label="Velas">
                     {trigger.maxCandlestickQty} × {trigger.candlestickTimeframe || trigger.tagCandlestickTimeframe}
                   </td>
-                  <td className="num">{trigger.conditions?.length ?? 0}</td>
-                  <td>
+                  <td className="num" data-label="Condiciones">{trigger.conditions?.length ?? 0}</td>
+                  <td data-label="Estado">
                     <StatusBadge tag={trigger.tagStatus} label={trigger.status || trigger.tagStatus} />
                   </td>
-                  <td>{formatDateTime(trigger.createdDate)}</td>
+                  <td data-label="Creado">{formatDateTime(trigger.createdDate)}</td>
                 </tr>
                 {expanded && (
                   <tr className="table__detail">
                     <td colSpan={COLUMN_COUNT}>
-                      <TriggerDetail trigger={trigger} onEdit={onEdit} />
+                      <TriggerDetail trigger={trigger} onEdit={onEdit} actions={detailActions?.(trigger)} />
                     </td>
                   </tr>
                 )}

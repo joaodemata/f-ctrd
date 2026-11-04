@@ -10,8 +10,8 @@ export interface ListTriggersParams {
   search?: string; // literal, C-TRD lo escapa
   startDate?: string; // YYYY-MM-DD, filtra created_date
   endDate?: string; // YYYY-MM-DD
-  // Sin showReferences solo se listan los activos; con showReferences tambien los inactivos y los reemplazados.
-  // tagStatus distinto de activo sin showReferences responde DVLIS003
+  // Sin showReferences solo se listan los activos, o los pendientes de aprobacion / no aprobados si se piden con
+  // tagStatus; con showReferences tambien los inactivos y los reemplazados. Inactivo sin showReferences es DVLIS003
   tagStatus?: string;
   showReferences?: boolean;
   // Solo las versiones de un trigger: la raiz y las que la tienen como idReferenceRoot. Con showReferences
@@ -39,6 +39,9 @@ export interface TriggerFields {
   conditions?: string[]; // ids sin repetir, en el orden en que se evaluan
   idCandlestickTimeframe: string; // catalogo TYPE_CANDLE_STICK
   maxCandlestickQty: number; // mayor a 0
+  // Codigo que dispara el trigger en el sistema externo (ej: Pine de TradingView), maximo 64 KB. C-TRD reemplaza
+  // {{ID_WEBHOOK}} por el id del webhook. Al actualizar, si no se envia se conserva el del trigger anterior
+  code?: string;
 }
 
 // Body de POST /operation/create/trigger: el trigger queda a nombre del usuario de la sesion (solo super usuario)
@@ -63,7 +66,8 @@ export interface UpdateTriggerBody extends TriggerFields {
 }
 
 // C-TRD no edita el documento: borra el anterior (queda Inactivo) y crea uno nuevo con otro id que lo referencia.
-// El pine_code y el idWebhook se conservan, asi que la alerta de TradingView no cambia
+// El idWebhook se conserva (y el codigo si no se envia otro), asi que la alerta de TradingView no cambia. La version
+// nueva queda Activa aunque la anterior estuviera pendiente de aprobacion: editar es aprobar
 export interface UpdateTriggerData {
   idTrigger: string;
   idPreviousTrigger: string;
