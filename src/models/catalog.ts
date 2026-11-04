@@ -20,6 +20,8 @@ export const CatalogType = {
   Condition: 'TYPE_CONDITION',
   UserPrivileges: 'USER_PRIVILEGES',
   Visibility: 'TYPE_VISIBILITY',
+  AgentThesisStatus: 'AGENT_THESIS_STATUS',
+  AgentRunStatus: 'AGENT_RUN_STATUS',
 } as const;
 
 export type CatalogType = (typeof CatalogType)[keyof typeof CatalogType];

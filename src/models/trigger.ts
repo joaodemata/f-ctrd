@@ -35,16 +35,20 @@ export interface Trigger extends RecordOwner, RecordVisibility {
   // Version anterior y raiz de la cadena de versiones; null en un trigger que nunca se actualizo
   idReference: ObjectId | null;
   idReferenceRoot: ObjectId | null;
+  // Codigo que dispara el trigger en el sistema externo (Pine de TradingView); C-TRD ya reemplazo {{ID_WEBHOOK}}
   pineCode: string | null;
   lastUpdatedAt: string;
   createdDate: string;
 }
 
 // Estados de un trigger (GENERIC_STATUS en common/constants.go). Al actualizar un trigger la version anterior
-// queda Inactiva y borrada logicamente
+// queda Inactiva y borrada logicamente. Los que crea un agente nacen Pendientes de aprobacion: el hook no los
+// dispara hasta que el super usuario los aprueba (Activo) o los rechaza (No aprobado, se conserva sin borrar)
 export const TriggerStatusTag = {
   Active: 'STATUS-ACTIVE',
   Inactive: 'STATUS-INACTIVE',
+  PendingForApprove: 'STATUS-PENDING-FOR-APPROVE',
+  NotApproved: 'STATUS-NOT-APPROVED',
 } as const;
 
 // Id de la version anterior, o null si es la version original
