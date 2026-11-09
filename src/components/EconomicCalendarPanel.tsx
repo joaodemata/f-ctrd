@@ -5,14 +5,17 @@ import { NARROW_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import { CALENDAR_TIME_MODE_EXACT, type CalendarEvent } from '../models/biquote';
 import { translateEventName } from '../utils/calendarNames';
 import { ErrorBanner } from './ErrorBanner';
+import { currentLanguage, memoByLanguage, t } from '../i18n/language';
 
 // El calendario cambia poco: se refresca cada 5 minutos (biquote permite 15.000 peticiones por minuto por IP)
 const CALENDAR_POLL_MS = 5 * 60_000;
 // Preferencia del visitante (panel abierto o cerrado); solo es una comodidad local
 const OPEN_STORAGE_KEY = 'fctrd.calendarOpen';
 
-const timeFormat = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit' });
-const dayFormat = new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'short' });
+const formats = memoByLanguage((locale) => ({
+  time: new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }),
+  day: new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'short' }),
+}));
 
 const MULTIPLIER_SUFFIX: Partial<Record<string, string>> = { thousands: 'K', millions: 'M', billions: 'B' };
 
@@ -35,7 +38,7 @@ function saveOpen(open: boolean) {
 // Los valores ya vienen en la escala del multiplicador (4.04 con millions = 4,04M)
 function formatValue(value: number | null, event: CalendarEvent): string | null {
   if (value === null) return null;
-  const number = new Intl.NumberFormat('es', {
+  const number = new Intl.NumberFormat(currentLanguage(), {
     minimumFractionDigits: event.digits,
     maximumFractionDigits: event.digits,
   }).format(value);
@@ -64,9 +67,9 @@ function startOfLocalDay(date: Date): number {
 
 function dayLabel(date: Date, now: Date): string {
   const diffDays = Math.round((startOfLocalDay(date) - startOfLocalDay(now)) / 86_400_000);
-  if (diffDays === 0) return 'Hoy';
-  if (diffDays === 1) return 'Mañana';
-  return dayFormat.format(date);
+  if (diffDays === 0) return t('Hoy', 'Today');
+  if (diffDays === 1) return t('Mañana', 'Tomorrow');
+  return formats().day.format(date);
 }
 
 interface DayGroup {
@@ -91,7 +94,9 @@ function groupByDay(events: CalendarEvent[], now: Date): DayGroup[] {
 
 // Hora local del evento; sin hora exacta puede salir en cualquier momento del dia
 function eventTime(event: CalendarEvent): string {
-  return event.timeMode === CALENDAR_TIME_MODE_EXACT ? timeFormat.format(new Date(event.time)) : 'Sin hora';
+  return event.timeMode === CALENDAR_TIME_MODE_EXACT
+    ? formats().time.format(new Date(event.time))
+    : t('Sin hora', 'No time');
 }
 
 // Ya paso: tiene dato real o su hora exacta quedo atras
@@ -114,8 +119,10 @@ function CalendarList({ calendar, groups, nextEvent, now }: CalendarListProps) {
       {calendar.error && (
         <ErrorBanner error={calendar.error} onRetry={calendar.refetch} stale={!!calendar.data} />
       )}
-      {calendar.isLoading && <p className="empty">Cargando calendario…</p>}
-      {calendar.data && groups.length === 0 && <p className="empty">Sin publicaciones de alto impacto.</p>}
+      {calendar.isLoading && <p className="empty">{t('Cargando calendario…', 'Loading calendar…')}</p>}
+      {calendar.data && groups.length === 0 && (
+        <p className="empty">{t('Sin publicaciones de alto impacto.', 'No high-impact releases.')}</p>
+      )}
 
       {groups.map((group) => (
         <section key={group.label} className="calendar__day">
@@ -150,11 +157,19 @@ function CalendarList({ calendar, groups, nextEvent, now }: CalendarListProps) {
                     <span className="calendar__values small">
                       {actual && (
                         <span>
-                          Real <strong>{actual}</strong>
+                          {t('Real', 'Actual')} <strong>{actual}</strong>
                         </span>
                       )}
-                      {forecast && <span>Prev. {forecast}</span>}
-                      {previous && <span>Ant. {previous}</span>}
+                      {forecast && (
+                        <span>
+                          {t('Prev.', 'Fcst.')} {forecast}
+                        </span>
+                      )}
+                      {previous && (
+                        <span>
+                          {t('Ant.', 'Prev.')} {previous}
+                        </span>
+                      )}
                     </span>
                   )}
                 </li>
@@ -165,7 +180,7 @@ function CalendarList({ calendar, groups, nextEvent, now }: CalendarListProps) {
       ))}
 
       <p className="calendar__source muted small">
-        Hora local. Fuente:{' '}
+        {t('Hora local. Fuente:', 'Local time. Source:')}{' '}
         <a href="https://biquote.io/docs/#calendar" target="_blank" rel="noreferrer">
           biquote.io
         </a>
@@ -207,13 +222,13 @@ export function EconomicCalendarPanel() {
     return (
       <>
         <button type="button" className="calendar-bar panel" onClick={() => sheetRef.current?.showModal()}>
-          <span className="calendar-bar__title">Calendario</span>
+          <span className="calendar-bar__title">{t('Calendario', 'Calendar')}</span>
           <span className="calendar-bar__next">
             {nextEvent
               ? `${eventTime(nextEvent)} ${nextEvent.countryCode} ${translateEventName(nextEvent.name)}`
               : calendar.isLoading
-                ? 'Cargando…'
-                : 'Ver publicaciones de alto impacto'}
+                ? t('Cargando…', 'Loading…')
+                : t('Ver publicaciones de alto impacto', 'See high-impact releases')}
           </span>
           <span className="calendar-bar__chevron" aria-hidden="true">
             ›
@@ -223,19 +238,19 @@ export function EconomicCalendarPanel() {
         <dialog
           ref={sheetRef}
           className="sheet"
-          aria-label="Calendario economico de alto impacto"
+          aria-label={t('Calendario economico de alto impacto', 'High-impact economic calendar')}
           // Clic en el fondo (fuera de la hoja) la cierra
           onClick={(event) => {
             if (event.target === event.currentTarget) event.currentTarget.close();
           }}
         >
           <div className="sheet__head">
-            <strong>Calendario economico</strong>
-            <span className="muted small">alto impacto</span>
+            <strong>{t('Calendario economico', 'Economic calendar')}</strong>
+            <span className="muted small">{t('alto impacto', 'high impact')}</span>
             <button
               type="button"
               className="sheet__close"
-              aria-label="Cerrar"
+              aria-label={t('Cerrar', 'Close')}
               onClick={() => sheetRef.current?.close()}
             >
               ×
@@ -253,8 +268,8 @@ export function EconomicCalendarPanel() {
     <aside className="calendar panel" data-open={open} aria-busy={calendar.isLoading || calendar.isRefreshing}>
       <button type="button" className="calendar__toggle" onClick={toggle} aria-expanded={open} aria-controls="calendar-body">
         <span>
-          <strong>Calendario economico</strong>
-          <span className="muted small"> · alto impacto</span>
+          <strong>{t('Calendario economico', 'Economic calendar')}</strong>
+          <span className="muted small"> · {t('alto impacto', 'high impact')}</span>
         </span>
         <span className="calendar__chevron" aria-hidden="true">
           ▾
@@ -263,7 +278,7 @@ export function EconomicCalendarPanel() {
 
       {!open && nextEvent && (
         <p className="calendar__next muted small">
-          Proximo: {eventTime(nextEvent)} {nextEvent.countryCode} {translateEventName(nextEvent.name)}
+          {t('Proximo:', 'Next:')} {eventTime(nextEvent)} {nextEvent.countryCode} {translateEventName(nextEvent.name)}
         </p>
       )}
 

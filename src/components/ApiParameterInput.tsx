@@ -7,6 +7,7 @@ import {
   type CallbackParameter,
 } from '../models/apiDefinition';
 import { AssetPicker } from './AssetPicker';
+import { t } from '../i18n/language';
 
 // Las APIs que leen datos por asset (ej: el CSV de Google Trends) reciben el id del asset como texto libre;
 // se muestra el selector de assets en lugar de pedir el ObjectID
@@ -20,9 +21,9 @@ export type ParameterDefinition = Omit<CallbackParameter, 'minValue' | 'maxValue
 export function parameterRangeText(parameter: ParameterDefinition): string | null {
   const min = parameter.minValue ?? null;
   const max = parameter.maxValue ?? null;
-  if (min !== null && max !== null) return `entre ${min} y ${max}`;
-  if (min !== null) return `mayor o igual a ${min}`;
-  if (max !== null) return `menor o igual a ${max}`;
+  if (min !== null && max !== null) return t(`entre ${min} y ${max}`, `between ${min} and ${max}`);
+  if (min !== null) return t(`mayor o igual a ${min}`, `greater than or equal to ${min}`);
+  if (max !== null) return t(`menor o igual a ${max}`, `less than or equal to ${max}`);
   return null;
 }
 
@@ -50,7 +51,7 @@ function AssetParameterInput({ onChange, invalid }: Pick<ApiParameterInputProps,
 // Control del parametro segun sus opciones y su dataType. C-TRD recibe siempre texto y lo valida
 export function ApiParameterInput({ parameter, value, onChange, invalid = false }: ApiParameterInputProps) {
   const { options } = parameter;
-  const emptyLabel = parameter.isRequired ? 'Elige una opcion' : 'Sin valor';
+  const emptyLabel = parameter.isRequired ? t('Elige una opcion', 'Choose an option') : t('Sin valor', 'No value');
 
   if (options?.source === ApiParameterOptionsSource.Static && options.values && options.values.length > 0) {
     return (
@@ -78,7 +79,7 @@ export function ApiParameterInput({ parameter, value, onChange, invalid = false 
           <option value="" disabled={parameter.isRequired}>
             {emptyLabel}
           </option>
-          <option value="true">Si (true)</option>
+          <option value="true">{t('Si', 'Yes')} (true)</option>
           <option value="false">No (false)</option>
         </select>
       );
@@ -118,19 +119,23 @@ export function ApiParameterInput({ parameter, value, onChange, invalid = false 
 // Validacion local equivalente a parseParameterValue en C-TRD. Retorna el mensaje o null si es valido
 export function validateParameterValue(parameter: ParameterDefinition, value: string): string | null {
   if (value === '') {
-    return parameter.isRequired && parameter.defaultValue === null ? 'Este parametro es obligatorio.' : null;
+    return parameter.isRequired && parameter.defaultValue === null
+      ? t('Este parametro es obligatorio.', 'This parameter is required.')
+      : null;
   }
   switch (parameter.dataType) {
     case ApiParameterType.Integer:
-      return /^-?\d+$/.test(value) ? validateParameterRange(parameter, Number(value)) : 'Debe ser un numero entero.';
+      return /^-?\d+$/.test(value)
+        ? validateParameterRange(parameter, Number(value))
+        : t('Debe ser un numero entero.', 'Must be a whole number.');
     case ApiParameterType.Float:
       return value.trim() !== '' && Number.isFinite(Number(value))
         ? validateParameterRange(parameter, Number(value))
-        : 'Debe ser un numero.';
+        : t('Debe ser un numero.', 'Must be a number.');
     case ApiParameterType.Boolean:
-      return value === 'true' || value === 'false' ? null : 'Debe ser true o false.';
+      return value === 'true' || value === 'false' ? null : t('Debe ser true o false.', 'Must be true or false.');
     case ApiParameterType.Date:
-      return /^\d{4}-\d{2}-\d{2}$/.test(value) ? null : 'Debe tener el formato YYYY-MM-DD.';
+      return /^\d{4}-\d{2}-\d{2}$/.test(value) ? null : t('Debe tener el formato YYYY-MM-DD.', 'Must use the YYYY-MM-DD format.');
   }
   return null;
 }
@@ -139,5 +144,7 @@ export function validateParameterValue(parameter: ParameterDefinition, value: st
 function validateParameterRange(parameter: ParameterDefinition, number: number): string | null {
   const belowMin = parameter.minValue != null && number < parameter.minValue;
   const aboveMax = parameter.maxValue != null && number > parameter.maxValue;
-  return belowMin || aboveMax ? `Debe estar ${parameterRangeText(parameter)}.` : null;
+  return belowMin || aboveMax
+    ? t(`Debe estar ${parameterRangeText(parameter)}.`, `Must be ${parameterRangeText(parameter)}.`)
+    : null;
 }

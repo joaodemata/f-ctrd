@@ -4,6 +4,7 @@ import { useApiQuery } from '../hooks/useApiQuery';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import type { Asset } from '../models/asset';
 import { ErrorBanner } from './ErrorBanner';
+import { t } from '../i18n/language';
 
 const PICKER_LIMIT = 50;
 
@@ -40,12 +41,12 @@ export function AssetPicker({ value, onChange, disabled = false, invalid = false
       <div className="picker__row">
         <input
           type="search"
-          placeholder="Buscar por tag, nombre o tipo"
+          placeholder={t('Buscar por tag, nombre o tipo', 'Search by tag, name or type')}
           value={search}
           maxLength={100}
           onChange={(event) => setSearch(event.target.value)}
           disabled={disabled}
-          aria-label="Buscar asset"
+          aria-label={t('Buscar asset', 'Search asset')}
         />
         <select
           value={value?.id ?? ''}
@@ -59,7 +60,11 @@ export function AssetPicker({ value, onChange, disabled = false, invalid = false
           aria-label="Asset"
         >
           <option value="" disabled>
-            {assets.isLoading ? 'Cargando…' : options.length === 0 ? 'Sin resultados' : 'Elige un asset'}
+            {assets.isLoading
+              ? t('Cargando…', 'Loading…')
+              : options.length === 0
+                ? t('Sin resultados', 'No results')
+                : t('Elige un asset', 'Choose an asset')}
           </option>
           {showSelected && <option value={value.id}>{assetLabel(value)}</option>}
           {options.map((asset) => (
@@ -71,7 +76,10 @@ export function AssetPicker({ value, onChange, disabled = false, invalid = false
       </div>
       {total > options.length && (
         <span className="form-field__hint">
-          Mostrando {options.length} de {total}; escribe para acotar la busqueda.
+          {t(
+            `Mostrando ${options.length} de ${total}; escribe para acotar la busqueda.`,
+            `Showing ${options.length} of ${total}; type to narrow the search.`,
+          )}
         </span>
       )}
       {assets.error && <ErrorBanner error={assets.error} onRetry={assets.refetch} stale={!!assets.data} />}

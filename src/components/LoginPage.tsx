@@ -3,10 +3,11 @@ import type { LoginBody } from '../api/auth';
 import { useApiMutation } from '../hooks/useApiMutation';
 import { useAuth } from '../hooks/useAuth';
 import { useHashParams } from '../hooks/useHashRoute';
-import { userDisplayName } from '../models/user';
+import { privilegeLabel, userDisplayName } from '../models/user';
 import { ErrorBanner } from './ErrorBanner';
 import { FormField } from './FormField';
 import { SeedwiseLogo } from './SeedwiseLogo';
+import { t } from '../i18n/language';
 
 interface FieldErrors {
   username?: string;
@@ -37,10 +38,10 @@ export function LoginPage() {
     event.preventDefault();
     // Mismos limites que LoginFormat en C-TRD
     const errors: FieldErrors = {};
-    if (!username.trim()) errors.username = 'Ingresa el usuario.';
-    else if (username.trim().length > 32) errors.username = 'Maximo 32 caracteres.';
-    if (!password) errors.password = 'Ingresa la contraseña.';
-    else if (password.length > 128) errors.password = 'Maximo 128 caracteres.';
+    if (!username.trim()) errors.username = t('Ingresa el usuario.', 'Enter your username.');
+    else if (username.trim().length > 32) errors.username = t('Maximo 32 caracteres.', 'Maximum 32 characters.');
+    if (!password) errors.password = t('Ingresa la contraseña.', 'Enter your password.');
+    else if (password.length > 128) errors.password = t('Maximo 128 caracteres.', 'Maximum 128 characters.');
     setClientErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
@@ -54,18 +55,19 @@ export function LoginPage() {
       <main className="page page--narrow">
         <LoginHero />
         <div className="page__head">
-          <h1>Sesion iniciada</h1>
+          <h1>{t('Sesion iniciada', 'Logged in')}</h1>
         </div>
         <section className="panel panel--padded">
           <p>
-            Estas conectado como <strong>{userDisplayName(auth.user)}</strong> ({auth.user.namePrivilege}).
+            {t('Estas conectado como', 'You are logged in as')} <strong>{userDisplayName(auth.user)}</strong> (
+            {privilegeLabel(auth.user.tagPrivilege, auth.user.namePrivilege)}).
           </p>
           <div className="form-actions">
             <a className="button button--primary" href={`#${next}`}>
-              Continuar
+              {t('Continuar', 'Continue')}
             </a>
             <button type="button" className="button" onClick={() => void auth.logout()}>
-              Cerrar sesion
+              {t('Cerrar sesion', 'Log out')}
             </button>
           </div>
         </section>
@@ -78,16 +80,18 @@ export function LoginPage() {
       <LoginHero />
       <div className="page__head">
         <div>
-          <h1>Iniciar sesion</h1>
+          <h1>{t('Iniciar sesion', 'Log in')}</h1>
           <p className="muted small">
-            La sesion es opcional: sin ella ves las oportunidades publicas y la ayuda. Con sesion ves tambien tus
-            oportunidades y las compartidas contigo. Triggers, condiciones y Google Trends son solo del super usuario.
+            {t(
+              'La sesion es opcional: sin ella ves las oportunidades publicas y la ayuda. Con sesion ves tambien tus oportunidades y las compartidas contigo. Triggers, condiciones y Google Trends son solo del super usuario.',
+              'Logging in is optional: without a session you see public opportunities and the help. With a session you also see your own opportunities and the ones shared with you. Triggers, conditions and Google Trends are for the super user only.',
+            )}
           </p>
         </div>
       </div>
 
       <form className="panel panel--padded form" onSubmit={handleSubmit} noValidate>
-        <FormField label="Usuario" required error={fieldError('username')}>
+        <FormField label={t('Usuario', 'Username')} required error={fieldError('username')}>
           <input
             type="text"
             autoComplete="username"
@@ -102,7 +106,7 @@ export function LoginPage() {
           />
         </FormField>
 
-        <FormField label="Contraseña" required error={fieldError('password')}>
+        <FormField label={t('Contraseña', 'Password')} required error={fieldError('password')}>
           <input
             type="password"
             autoComplete="current-password"
@@ -118,10 +122,10 @@ export function LoginPage() {
 
         <div className="form-actions">
           <button type="submit" className="button button--primary" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Ingresando…' : 'Ingresar'}
+            {mutation.isPending ? t('Ingresando…', 'Logging in…') : t('Ingresar', 'Log in')}
           </button>
           <a className="button" href="#/">
-            Continuar sin sesion
+            {t('Continuar sin sesion', 'Continue without a session')}
           </a>
         </div>
       </form>
@@ -135,7 +139,7 @@ function LoginHero() {
     <div className="login-hero">
       <SeedwiseLogo animated className="seedwise-logo--sway" title="seedwise.io" />
       <span className="login-hero__name">seedwise</span>
-      <p className="tagline">Siembra hoy, cosecha mañana.</p>
+      <p className="tagline">{t('Siembra hoy, cosecha mañana.', 'Sow today, harvest tomorrow.')}</p>
     </div>
   );
 }

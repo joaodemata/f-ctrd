@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { t } from '../i18n/language';
 
 export interface FilterValues {
   search: string;
@@ -19,7 +20,7 @@ export function Filters({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Activo, accion, estado o trigger',
+  placeholder = t('Activo, accion, estado o trigger', 'Asset, action, status or trigger'),
 }: FiltersProps) {
   // El texto se edita localmente y se propaga con debounce para no pedir en cada tecla
   const [search, setSearch] = useState(value.search);
@@ -37,7 +38,7 @@ export function Filters({
   return (
     <form className="filters" onSubmit={(event) => event.preventDefault()}>
       <label className="field field--grow">
-        <span>Buscar</span>
+        <span>{t('Buscar', 'Search')}</span>
         <input
           type="search"
           placeholder={placeholder}
@@ -48,7 +49,7 @@ export function Filters({
         />
       </label>
       <label className="field">
-        <span>Desde</span>
+        <span>{t('Desde', 'From')}</span>
         <input
           type="date"
           value={value.startDate}
@@ -58,7 +59,7 @@ export function Filters({
         />
       </label>
       <label className="field">
-        <span>Hasta</span>
+        <span>{t('Hasta', 'To')}</span>
         <input
           type="date"
           value={value.endDate}
@@ -73,10 +74,12 @@ export function Filters({
           className="button button--ghost"
           onClick={() => onChange({ search: '', startDate: '', endDate: '' })}
         >
-          Limpiar
+          {t('Limpiar', 'Clear')}
         </button>
       )}
-      {invalidRange && <p className="field-error">La fecha inicial no puede ser mayor a la final.</p>}
+      {invalidRange && <p className="field-error">
+          {t('La fecha inicial no puede ser mayor a la final.', 'The start date cannot be after the end date.')}
+        </p>}
     </form>
   );
 }

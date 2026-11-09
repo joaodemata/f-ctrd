@@ -15,12 +15,13 @@ import { Pagination } from './Pagination';
 import { ReviewButtons } from './ReviewButtons';
 import { StatusBadge } from './StatusBadge';
 import { TriggersTable } from './TriggersTable';
+import { t } from '../i18n/language';
 
 const DEFAULT_LIMIT = 10;
 
 const VIEWS = [
-  { tag: TriggerStatusTag.PendingForApprove, label: 'Pendientes' },
-  { tag: TriggerStatusTag.NotApproved, label: 'No aprobados' },
+  { tag: TriggerStatusTag.PendingForApprove, label: { es: 'Pendientes', en: 'Pending' } },
+  { tag: TriggerStatusTag.NotApproved, label: { es: 'No aprobados', en: 'Not approved' } },
 ] as const;
 
 type ViewTag = (typeof VIEWS)[number]['tag'];
@@ -70,8 +71,14 @@ export function AgentReviewPage() {
     if (result.ok) {
       setLastReview(
         decision === ReviewDecision.Approve
-          ? `Trigger "${name}" aprobado: queda Activo y sus condiciones pendientes pasan a Inactivas.`
-          : `Trigger "${name}" rechazado: queda No aprobado y el webhook lo ignora.`,
+          ? t(
+              `Trigger "${name}" aprobado: queda Activo y sus condiciones pendientes pasan a Inactivas.`,
+              `Trigger "${name}" approved: it is now Active and its pending conditions become Inactive.`,
+            )
+          : t(
+              `Trigger "${name}" rechazado: queda No aprobado y el webhook lo ignora.`,
+              `Trigger "${name}" rejected: it stays Not approved and the webhook ignores it.`,
+            ),
       );
       // Aprobar un trigger tambien cambia el estado de sus condiciones
       refetchAll();
@@ -87,8 +94,14 @@ export function AgentReviewPage() {
     if (result.ok) {
       setLastReview(
         decision === ReviewDecision.Approve
-          ? `Condicion "${name}" aprobada: queda Inactiva y el cronjob empieza a evaluarla.`
-          : `Condicion "${name}" rechazada: ningun trigger nuevo o aprobado puede usarla.`,
+          ? t(
+              `Condicion "${name}" aprobada: queda Inactiva y el cronjob empieza a evaluarla.`,
+              `Condition "${name}" approved: it is now Inactive and the cronjob starts evaluating it.`,
+            )
+          : t(
+              `Condicion "${name}" rechazada: ningun trigger nuevo o aprobado puede usarla.`,
+              `Condition "${name}" rejected: no new or approved trigger can use it.`,
+            ),
       );
       conditions.refetch();
     }
@@ -101,15 +114,17 @@ export function AgentReviewPage() {
     <main className="page">
       <div className="page__head">
         <div>
-          <h1>Revision de agentes</h1>
+          <h1>{t('Revision de agentes', 'Agent review')}</h1>
           <p className="muted small">
-            Las condiciones y triggers que crean los agentes nacen pendientes: el cronjob no evalua esas condiciones y el
-            webhook ignora esos triggers hasta que los apruebes. Revisa cada corrida en{' '}
-            <a href="#/agentes/corridas">Corridas de agentes</a>.
+            {t(
+              'Las condiciones y triggers que crean los agentes nacen pendientes: el cronjob no evalua esas condiciones y el webhook ignora esos triggers hasta que los apruebes. Revisa cada corrida en ',
+              'Conditions and triggers created by the agents start out pending: the cronjob does not evaluate those conditions and the webhook ignores those triggers until you approve them. Check each run in ',
+            )}
+            <a href="#/agentes/corridas">{t('Corridas de agentes', 'Agent runs')}</a>.
           </p>
         </div>
         <div className="form-actions">
-          <span className="segmented" role="group" aria-label="Estado">
+          <span className="segmented" role="group" aria-label={t('Estado', 'Status')}>
             {VIEWS.map((item) => (
               <button
                 key={item.tag}
@@ -123,7 +138,7 @@ export function AgentReviewPage() {
                   setLastReview(null);
                 }}
               >
-                {item.label}
+                {t(item.label)}
               </button>
             ))}
           </span>
@@ -133,7 +148,7 @@ export function AgentReviewPage() {
             onClick={refetchAll}
             disabled={triggers.isLoading || triggers.isRefreshing || conditions.isLoading || conditions.isRefreshing}
           >
-            Actualizar
+            {t('Actualizar', 'Refresh')}
           </button>
         </div>
       </div>
@@ -150,8 +165,10 @@ export function AgentReviewPage() {
             <h2 id="review-triggers-title">Triggers{triggers.data ? ` (${triggers.data.page})` : ''}</h2>
             {pendingView && (
               <p className="muted small">
-                Aprobar un trigger tambien aprueba sus condiciones pendientes. No se puede aprobar si usa una condicion
-                rechazada. Despliega uno para ver sus condiciones y su codigo Pine.
+                {t(
+                  'Aprobar un trigger tambien aprueba sus condiciones pendientes. No se puede aprobar si usa una condicion rechazada. Despliega uno para ver sus condiciones y su codigo Pine.',
+                  'Approving a trigger also approves its pending conditions. It cannot be approved if it uses a rejected condition. Expand one to see its conditions and its Pine code.',
+                )}
               </p>
             )}
           </div>
@@ -160,20 +177,27 @@ export function AgentReviewPage() {
         {triggerReview.error && <ErrorBanner error={triggerReview.error} />}
         <div className="panel" aria-busy={triggers.isLoading || triggers.isRefreshing}>
           {triggers.isLoading ? (
-            <p className="empty">Cargando triggers…</p>
+            <p className="empty">{t('Cargando triggers…', 'Loading triggers…')}</p>
           ) : (
             triggers.data && (
               <>
                   <TriggersTable
                     triggers={triggers.data.triggers}
-                    emptyMessage={pendingView ? 'No hay triggers pendientes de aprobacion.' : 'No hay triggers rechazados.'}
+                    emptyMessage={
+                      pendingView
+                        ? t('No hay triggers pendientes de aprobacion.', 'No triggers pending approval.')
+                        : t('No hay triggers rechazados.', 'No rejected triggers.')
+                    }
                     detailActions={
                       pendingView
                         ? (trigger) => (
                             <ReviewButtons
                               pendingDecision={decisionFor(trigger.id)}
                               disabled={reviewing !== null}
-                              approveHint="Queda Activo y aprueba sus condiciones pendientes"
+                              approveHint={t(
+                                'Queda Activo y aprueba sus condiciones pendientes',
+                                'Becomes Active and approves its pending conditions',
+                              )}
                               onDecision={(decision) => void handleTrigger(trigger.id, trigger.name, decision)}
                             />
                           )
@@ -202,12 +226,15 @@ export function AgentReviewPage() {
         <div className="page__head">
           <div>
             <h2 id="review-conditions-title">
-              Condiciones{conditions.data ? ` (${conditions.data.page})` : ''}
+              {t('Condiciones', 'Conditions')}
+              {conditions.data ? ` (${conditions.data.page})` : ''}
             </h2>
             {pendingView && (
               <p className="muted small">
-                Para rechazar una condicion que usa un trigger, rechaza primero el trigger. Aprobada queda Inactiva y el
-                cronjob empieza a evaluarla.
+                {t(
+                  'Para rechazar una condicion que usa un trigger, rechaza primero el trigger. Aprobada queda Inactiva y el cronjob empieza a evaluarla.',
+                  'To reject a condition used by a trigger, reject the trigger first. Once approved it is Inactive and the cronjob starts evaluating it.',
+                )}
               </p>
             )}
           </div>
@@ -218,12 +245,14 @@ export function AgentReviewPage() {
         {conditionReview.error && <ErrorBanner error={conditionReview.error} />}
         <div className="panel" aria-busy={conditions.isLoading || conditions.isRefreshing}>
           {conditions.isLoading ? (
-            <p className="empty">Cargando condiciones…</p>
+            <p className="empty">{t('Cargando condiciones…', 'Loading conditions…')}</p>
           ) : (
             conditions.data &&
             (conditionList.length === 0 ? (
               <p className="empty">
-                {pendingView ? 'No hay condiciones pendientes de aprobacion.' : 'No hay condiciones rechazadas.'}
+                {pendingView
+                  ? t('No hay condiciones pendientes de aprobacion.', 'No conditions pending approval.')
+                  : t('No hay condiciones rechazadas.', 'No rejected conditions.')}
               </p>
             ) : (
               <>
@@ -231,13 +260,13 @@ export function AgentReviewPage() {
                 <table className="table table--cards">
                   <thead>
                     <tr>
-                      <th scope="col">Condicion</th>
-                      <th scope="col">Tipo</th>
-                      <th scope="col">Proveedor</th>
+                      <th scope="col">{t('Condicion', 'Condition')}</th>
+                      <th scope="col">{t('Tipo', 'Type')}</th>
+                      <th scope="col">{t('Proveedor', 'Provider')}</th>
                       <th scope="col">Callback</th>
-                      <th scope="col">Cada</th>
-                      <th scope="col">Creada</th>
-                      <th scope="col">{pendingView ? 'Revision' : 'Estado'}</th>
+                      <th scope="col">{t('Cada', 'Every')}</th>
+                      <th scope="col">{t('Creada', 'Created')}</th>
+                      <th scope="col">{pendingView ? t('Revision', 'Review') : t('Estado', 'Status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -252,20 +281,20 @@ export function AgentReviewPage() {
                             <CopyButton text={condition.id} />
                           </div>
                         </td>
-                        <td data-label="Tipo">{condition.nameTypeCondition || '—'}</td>
-                        <td data-label="Proveedor">{condition.nameProvider}</td>
+                        <td data-label={t('Tipo', 'Type')}>{condition.nameTypeCondition || '—'}</td>
+                        <td data-label={t('Proveedor', 'Provider')}>{condition.nameProvider}</td>
                         <td data-label="Callback">
                           <code className="small">{condition.callbackFunction}</code>
                           <CallbackParametersList parameters={condition.parametersCallback} />
                         </td>
-                        <td data-label="Cada">
+                        <td data-label={t('Cada', 'Every')}>
                           {condition.isWebhookOnly
                             ? 'Webhook'
                             : condition.intervalSeconds
                               ? formatDuration(Math.round(condition.intervalSeconds / 60))
                               : '—'}
                         </td>
-                        <td data-label="Creada">{formatDateTime(condition.createdDate)}</td>
+                        <td data-label={t('Creada', 'Created')}>{formatDateTime(condition.createdDate)}</td>
                         <td className="cell--actions">
                           {pendingView ? (
                             <ReviewButtons
