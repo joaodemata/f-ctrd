@@ -1,5 +1,6 @@
 import { useState, type ComponentType } from 'react';
 import { apiBaseUrl } from './api/config';
+import { Disclaimer } from './components/Disclaimer';
 import { AgentReviewPage } from './components/AgentReviewPage';
 import { AgentRunsPage } from './components/AgentRunsPage';
 import { AgentThesesPage } from './components/AgentThesesPage';
@@ -124,6 +125,7 @@ export function App() {
         <SessionMenu />
       </header>
       <Page key={`${route.path}:${allowed}`} />
+      <Disclaimer />
     </>
   );
 }

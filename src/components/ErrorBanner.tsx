@@ -15,6 +15,13 @@ export function ErrorBanner({ error, onRetry, stale = false }: ErrorBannerProps)
     <div className="error-banner" role="alert">
       <div className="error-banner__body">
         <strong>{stale ? 'No se pudo actualizar. ' : ''}{error.message}</strong>
+        {error.kind === 'rateLimit' && (
+          <p className="muted">
+            {error.retryAfterSeconds
+              ? `Espera ${error.retryAfterSeconds} s antes de reintentar.`
+              : 'Espera unos segundos antes de reintentar.'}
+          </p>
+        )}
         {error.kind === 'network' && (
           <p className="muted">Revisa que C-TRD este corriendo y que este origen este en JM_CTRD_CORS_ORIGINS.</p>
         )}

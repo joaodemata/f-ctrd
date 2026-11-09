@@ -1719,6 +1719,619 @@ a {
   gap: 8px;
 }
 
+/* Aviso legal al pie de todas las paginas */
+.disclaimer {
+  max-width: 1280px;
+  margin: 8px auto 0;
+  padding: 16px 24px 32px;
+}
+
+.disclaimer p {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand-coin);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.disclaimer strong {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .disclaimer {
+    padding: 12px 16px 24px;
+  }
+}
+
+/* Dashboard: oportunidades + calendario economico al costado */
+
+.dashboard__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+}
+
+.dashboard__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+/* Con el calendario al costado la columna es mas angosta: las seis tarjetas de estado entran en una fila. En
+   telefono se mantienen las dos filas de tres */
+@media (min-width: 641px) {
+  .dashboard__main .summary {
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  }
+}
+
+/* Ganadores y perdedores (biquote) */
+
+.movers {
+  --up: var(--status-active);
+  --down: var(--status-canceled);
+  display: grid;
+  gap: 6px;
+  padding: 10px 14px;
+}
+
+.movers__loading {
+  margin: 0;
+}
+
+.movers__filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+/* Mientras llega el otro mercado se ve el anterior atenuado */
+.movers[aria-busy='true'] .movers__ticker-wrap {
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.movers__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.movers__label {
+  flex: none;
+  width: 92px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tone);
+}
+
+.movers__row[data-tone='up'] {
+  --tone: var(--up);
+}
+
+.movers__row[data-tone='down'] {
+  --tone: var(--down);
+}
+
+/* Cinta en movimiento entre dos flechas: recorta lo que sobra, nunca ensancha la pagina */
+.movers__ticker-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.movers__ticker {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  /* Desvanece los bordes para que los simbolos entren y salgan suave */
+  mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+}
+
+/* La mueve MarketMoversBanner con requestAnimationFrame */
+.movers__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.movers__arrow {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0 0 2px;
+  font: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--border));
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.movers__arrow:hover {
+  background: color-mix(in srgb, var(--tone) 18%, var(--surface));
+}
+
+.movers__list {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  /* El padding derecho iguala el gap entre la primera copia y la segunda */
+  padding: 2px 8px 2px 0;
+  list-style: none;
+}
+
+.movers__item {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--border));
+  background: color-mix(in srgb, var(--tone) 8%, var(--surface));
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.movers__symbol {
+  font-weight: 600;
+}
+
+.movers__price {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.movers__change {
+  color: var(--tone);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.movers__meta {
+  margin: 0;
+}
+
+/* Calendario economico (biquote) */
+
+.calendar {
+  width: 320px;
+  display: grid;
+  overflow: hidden;
+  position: sticky;
+  top: 16px;
+}
+
+.calendar[data-open='false'] {
+  width: 240px;
+}
+
+.calendar__toggle {
+  font: inherit;
+  color: var(--text);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.calendar[data-open='true'] .calendar__toggle {
+  border-bottom-color: var(--border);
+}
+
+.calendar__toggle:hover {
+  background: var(--surface-2);
+}
+
+.calendar__chevron {
+  color: var(--muted);
+  transition: transform 0.2s var(--ease);
+}
+
+.calendar[data-open='false'] .calendar__chevron {
+  transform: rotate(-90deg);
+}
+
+.calendar__next {
+  margin: 0;
+  padding: 0 14px 12px;
+}
+
+.calendar__body {
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  padding: 4px 0 8px;
+}
+
+.calendar__body .error-banner {
+  margin: 8px 12px;
+}
+
+.calendar__day-label {
+  margin: 0;
+  padding: 10px 14px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.calendar__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar__event {
+  display: grid;
+  grid-template-columns: 52px 30px minmax(0, 1fr);
+  column-gap: 8px;
+  row-gap: 2px;
+  padding: 6px 14px;
+  border-left: 3px solid transparent;
+  font-size: 0.85rem;
+}
+
+.calendar__event[data-past='true'] {
+  opacity: 0.55;
+}
+
+.calendar__event[data-next='true'] {
+  border-left-color: var(--status-canceled);
+  background: color-mix(in srgb, var(--status-canceled) 8%, transparent);
+}
+
+.calendar__time {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.calendar__country {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  align-self: start;
+  padding: 1px 0;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.calendar__name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.calendar__name a:hover {
+  text-decoration: underline;
+}
+
+.calendar__values {
+  grid-column: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar__values strong {
+  color: var(--text);
+}
+
+.calendar__source {
+  margin: 8px 14px 0;
+}
+
+/* Titulo del dashboard: nombre, estado en vivo y boton "i" con las notas */
+.dashboard__title {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+/* La nota se ancla a la fila del titulo (no al boton) para no salirse de la pantalla a la derecha */
+.dashboard__title .info {
+  position: static;
+}
+
+.dashboard__title .info__panel {
+  width: min(360px, 100%);
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--status-active);
+  background: color-mix(in srgb, var(--status-active) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-active) 35%, transparent);
+}
+
+.live-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.info {
+  position: relative;
+  display: inline-flex;
+}
+
+.info__button {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font: italic 600 0.85rem/1 Georgia, 'Times New Roman', serif;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.info__button:hover,
+.info__button[aria-expanded='true'] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.info__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: min(320px, calc(100vw - 32px));
+  padding: 12px 14px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  animation: page-in 0.2s var(--ease) both;
+}
+
+.info__panel p {
+  margin: 0;
+}
+
+/* Pantalla angosta: el calendario es una barra de una linea que abre una hoja inferior */
+.calendar-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.calendar-bar__title {
+  flex: none;
+  font-weight: 600;
+}
+
+.calendar-bar__next {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+
+.calendar-bar__next::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--status-canceled);
+  vertical-align: 1px;
+}
+
+.calendar-bar__chevron {
+  flex: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  margin: auto auto 0;
+  padding: 0;
+  display: none;
+  flex-direction: column;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  box-shadow: var(--shadow);
+}
+
+.sheet[open] {
+  display: flex;
+  animation: sheet-in 0.25s var(--ease) both;
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+.sheet__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sheet__close {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  align-self: center;
+  font: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.sheet__close:hover {
+  background: var(--surface-2);
+}
+
+.calendar__body.sheet__body {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 16px;
+}
+
+/* Sin espacio para dos columnas: el calendario (barra) pasa arriba del listado */
+@media (max-width: 1000px) {
+  .dashboard__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calendar-bar {
+    order: -1;
+  }
+}
+
+/* Telefono: una sola cinta, con el selector de lado y mercado en una linea */
+.movers__compact-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.segmented {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.segmented button {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 4px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.segmented button[data-tone='up'] {
+  --tone: var(--status-active);
+}
+
+.segmented button[data-tone='down'] {
+  --tone: var(--status-canceled);
+}
+
+.segmented button[aria-pressed='true'] {
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 14%, var(--surface));
+}
+
+.movers__select {
+  /* Se encoge antes que el selector de lado para no salirse de la tarjeta en 360px */
+  flex: 0 1 112px;
+  min-width: 0;
+  width: 112px;
+  padding: 5px 6px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .movers {
+    padding: 10px 12px;
+  }
+
+  .movers__arrow {
+    width: 26px;
+    height: 26px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
