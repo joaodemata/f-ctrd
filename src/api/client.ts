@@ -1,5 +1,5 @@
 import { apiBaseUrl, DEFAULT_TIMEOUT_MS } from './config';
-import { ApiError, FrontendTracking, apiErrorFromException, apiErrorFromResponse } from './errors';
+import { ApiError, FrontendTracking, apiErrorFromException, apiErrorFromExternalResponse, apiErrorFromResponse } from './errors';
 import { clearSession, getSessionToken, isInvalidSessionTracking } from './session';
 import type { ApiResponse, ApiResult, HttpMethod, QueryParams, QueryValue, RequestOptions } from './types';
 
@@ -10,8 +10,8 @@ function serializeQueryValue(value: QueryValue): string | null {
   return String(value);
 }
 
-export function buildUrl(path: string, query?: QueryParams): string {
-  const url = new URL(apiBaseUrl + (path.startsWith('/') ? path : `/${path}`));
+export function buildUrl(path: string, query?: QueryParams, baseUrl: string = apiBaseUrl): string {
+  const url = new URL(baseUrl + (path.startsWith('/') ? path : `/${path}`));
   if (query) {
     for (const [key, raw] of Object.entries(query)) {
       // Los slices de Go se envian como parametros repetidos
@@ -31,19 +31,29 @@ function isApiResponse(value: unknown): value is ApiResponse<unknown> {
   return typeof candidate.status === 'string' && typeof candidate.tracking === 'string';
 }
 
-// Punto unico de salida hacia C-TRD. Ningun componente debe llamar fetch directamente
-export async function request<T>(method: HttpMethod, path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
+// Abort con tiempo limite que tambien sigue la cancelacion del llamador (por ejemplo un componente que se desmonta)
+function startTimeout(options: Pick<RequestOptions, 'signal' | 'timeoutMs'>) {
   const controller = new AbortController();
-  let timedOut = false;
+  const state = { timedOut: false };
   const timer = setTimeout(() => {
-    timedOut = true;
+    state.timedOut = true;
     controller.abort();
   }, options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
 
-  // Si el llamador cancela (por ejemplo un componente que se desmonta) cancelamos tambien
   const onExternalAbort = () => controller.abort();
   if (options.signal?.aborted) controller.abort();
   options.signal?.addEventListener('abort', onExternalAbort);
+
+  const stop = () => {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', onExternalAbort);
+  };
+  return { controller, state, stop };
+}
+
+// Punto unico de salida hacia C-TRD. Ningun componente debe llamar fetch directamente
+export async function request<T>(method: HttpMethod, path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
+  const { controller, state, stop } = startTimeout(options);
 
   try {
     const { body: requestBody } = options;
@@ -92,10 +102,49 @@ export async function request<T>(method: HttpMethod, path: string, options: Requ
       meta: { httpStatus: response.status, message: body.message, tracking: body.tracking, date: body.date },
     };
   } catch (cause) {
-    return { ok: false, error: apiErrorFromException(cause, timedOut) };
+    return { ok: false, error: apiErrorFromException(cause, state.timedOut) };
   } finally {
-    clearTimeout(timer);
-    options.signal?.removeEventListener('abort', onExternalAbort);
+    stop();
+  }
+}
+
+// GET a una API publica externa (no C-TRD): sin envoltura APIResponse ni token de sesion. La respuesta exitosa es el
+// JSON tal cual; los errores se convierten al mismo ApiError para mostrarlos con ErrorBanner
+export async function externalGet<T>(
+  baseUrl: string,
+  path: string,
+  options: Omit<RequestOptions, 'body'> = {},
+): Promise<ApiResult<T>> {
+  const { controller, state, stop } = startTimeout(options);
+
+  try {
+    const response = await fetch(buildUrl(path, options.query, baseUrl), {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch (cause) {
+      return {
+        ok: false,
+        error: new ApiError({ kind: 'parse', tracking: FrontendTracking.parse, httpStatus: response.status, cause }),
+      };
+    }
+
+    if (!response.ok) return { ok: false, error: apiErrorFromExternalResponse(response, body) };
+
+    return {
+      ok: true,
+      data: body as T,
+      meta: { httpStatus: response.status, message: '', tracking: '', date: new Date().toISOString() },
+    };
+  } catch (cause) {
+    return { ok: false, error: apiErrorFromException(cause, state.timedOut) };
+  } finally {
+    stop();
   }
 }
 

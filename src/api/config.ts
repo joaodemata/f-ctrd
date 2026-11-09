@@ -2,11 +2,15 @@
 
 const DEFAULT_API_BASE_URL = 'http://localhost:8080';
 const DEFAULT_POLL_INTERVAL_MS = 30_000;
+const DEFAULT_BIQUOTE_BASE_URL = 'https://biquote.io';
 
 // El servidor Go tiene 10s de read/write timeout, el frontend corta un poco antes
 export const DEFAULT_TIMEOUT_MS = 9_000;
 
 export const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
+
+// API publica de biquote (calendario economico y mercado). Sin clave y con CORS abierto: el navegador la llama directo
+export const biquoteBaseUrl = (import.meta.env.VITE_BIQUOTE_BASE_URL || DEFAULT_BIQUOTE_BASE_URL).replace(/\/+$/, '');
 
 const parsedPoll = Number(import.meta.env.VITE_POLL_INTERVAL_MS ?? DEFAULT_POLL_INTERVAL_MS);
 export const pollIntervalMs = Number.isFinite(parsedPoll) && parsedPoll >= 0 ? parsedPoll : DEFAULT_POLL_INTERVAL_MS;
