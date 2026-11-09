@@ -7,6 +7,7 @@ import { formatDateTime, formatDuration } from '../utils/format';
 import { ErrorBanner } from './ErrorBanner';
 import { Pagination } from './Pagination';
 import { StatusBadge } from './StatusBadge';
+import { t } from '../i18n/language';
 
 const DEFAULT_LIMIT = 10;
 
@@ -40,17 +41,17 @@ export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
   return (
     <section className="stack" aria-labelledby="conditions-title">
       <div className="page__head">
-        <h2 id="conditions-title">Condiciones registradas</h2>
+        <h2 id="conditions-title">{t('Condiciones registradas', 'Registered conditions')}</h2>
         <input
           type="search"
-          placeholder="Buscar condicion"
+          placeholder={t('Buscar condicion', 'Search condition')}
           value={search}
           maxLength={100}
           onChange={(event) => {
             setSearch(event.target.value);
             setPage(1);
           }}
-          aria-label="Buscar condicion"
+          aria-label={t('Buscar condicion', 'Search condition')}
         />
       </div>
 
@@ -58,24 +59,28 @@ export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
 
       <div className="panel" aria-busy={list.isLoading || list.isRefreshing}>
         {list.isLoading ? (
-          <p className="empty">Cargando condiciones…</p>
+          <p className="empty">{t('Cargando condiciones…', 'Loading conditions…')}</p>
         ) : (
           list.data &&
           (list.data.conditions.length === 0 ? (
-            <p className="empty">No hay condiciones{debouncedSearch ? ' con esta busqueda' : ''}.</p>
+            <p className="empty">
+              {debouncedSearch
+                ? t('No hay condiciones con esta busqueda.', 'No conditions match this search.')
+                : t('No hay condiciones.', 'There are no conditions.')}
+            </p>
           ) : (
             <>
               <div className="table-wrap">
                 <table className="table table--cards">
                   <thead>
                     <tr>
-                      <th scope="col">Condicion</th>
-                      <th scope="col">Tipo</th>
-                      <th scope="col">Proveedor</th>
+                      <th scope="col">{t('Condicion', 'Condition')}</th>
+                      <th scope="col">{t('Tipo', 'Type')}</th>
+                      <th scope="col">{t('Proveedor', 'Provider')}</th>
                       <th scope="col">Callback</th>
-                      <th scope="col">Cada</th>
-                      <th scope="col">Estado</th>
-                      <th scope="col">Ultima evaluacion</th>
+                      <th scope="col">{t('Cada', 'Every')}</th>
+                      <th scope="col">{t('Estado', 'Status')}</th>
+                      <th scope="col">{t('Ultima evaluacion', 'Last evaluation')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -86,23 +91,23 @@ export function ConditionsTable({ refreshKey }: { refreshKey: number }) {
                           {condition.tag && <div className="muted small">{condition.tag}</div>}
                           {condition.description && <div className="muted small">{condition.description}</div>}
                         </td>
-                        <td data-label="Tipo">{condition.nameTypeCondition || '—'}</td>
-                        <td data-label="Proveedor">{condition.nameProvider}</td>
+                        <td data-label={t('Tipo', 'Type')}>{condition.nameTypeCondition || '—'}</td>
+                        <td data-label={t('Proveedor', 'Provider')}>{condition.nameProvider}</td>
                         <td data-label="Callback">
                           <code className="small">{condition.callbackFunction}</code>
                           <CallbackParametersList parameters={condition.parametersCallback} />
                         </td>
-                        <td data-label="Cada">
+                        <td data-label={t('Cada', 'Every')}>
                           {condition.isWebhookOnly
                             ? 'Webhook'
                             : condition.intervalSeconds
                               ? formatDuration(Math.round(condition.intervalSeconds / 60))
                               : '—'}
                         </td>
-                        <td data-label="Estado">
+                        <td data-label={t('Estado', 'Status')}>
                           <StatusBadge tag={condition.tagStatus} label={condition.status || condition.tagStatus} />
                         </td>
-                        <td data-label="Ultima evaluacion">{formatDateTime(condition.lastExecutedAt)}</td>
+                        <td data-label={t('Ultima evaluacion', 'Last evaluation')}>{formatDateTime(condition.lastExecutedAt)}</td>
                       </tr>
                     ))}
                   </tbody>

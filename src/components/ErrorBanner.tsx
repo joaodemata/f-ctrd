@@ -1,4 +1,5 @@
 import type { ApiError } from '../api/errors';
+import { t } from '../i18n/language';
 
 interface ErrorBannerProps {
   error: ApiError;
@@ -14,16 +15,24 @@ export function ErrorBanner({ error, onRetry, stale = false }: ErrorBannerProps)
   return (
     <div className="error-banner" role="alert">
       <div className="error-banner__body">
-        <strong>{stale ? 'No se pudo actualizar. ' : ''}{error.message}</strong>
+        <strong>{stale ? t('No se pudo actualizar. ', 'Could not refresh. ') : ''}{error.message}</strong>
         {error.kind === 'rateLimit' && (
           <p className="muted">
             {error.retryAfterSeconds
-              ? `Espera ${error.retryAfterSeconds} s antes de reintentar.`
-              : 'Espera unos segundos antes de reintentar.'}
+              ? t(
+                  `Espera ${error.retryAfterSeconds} s antes de reintentar.`,
+                  `Wait ${error.retryAfterSeconds} s before retrying.`,
+                )
+              : t('Espera unos segundos antes de reintentar.', 'Wait a few seconds before retrying.')}
           </p>
         )}
         {error.kind === 'network' && (
-          <p className="muted">Revisa que C-TRD este corriendo y que este origen este en JM_CTRD_CORS_ORIGINS.</p>
+          <p className="muted">
+            {t(
+              'Revisa que C-TRD este corriendo y que este origen este en JM_CTRD_CORS_ORIGINS.',
+              'Check that C-TRD is running and that this origin is in JM_CTRD_CORS_ORIGINS.',
+            )}
+          </p>
         )}
         {fieldEntries.length > 0 ? (
           <ul>
@@ -46,7 +55,7 @@ export function ErrorBanner({ error, onRetry, stale = false }: ErrorBannerProps)
       </div>
       {onRetry && error.kind !== 'validation' && (
         <button type="button" className="button" onClick={onRetry}>
-          Reintentar
+          {t('Reintentar', 'Retry')}
         </button>
       )}
     </div>

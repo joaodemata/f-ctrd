@@ -1,3 +1,4 @@
+import { t } from '../i18n/language';
 import { isSetObjectId, type ObjectId } from './opportunity';
 
 // Espejo de models/users_model.go (UsersModelType). Los datos de la contraseña, del login y de auditoria son json:"-"
@@ -47,10 +48,16 @@ export function isOwnedBy(record: RecordOwner, user: User | null | undefined): b
 // common/constants.go -> UserPrivilegeSuperUser / UserPrivilegeGenericUser / UserPrivilegeAgent. El agente es el
 // usuario claude: lo que crea queda pendiente de aprobacion del super usuario
 export const USER_PRIVILEGE = {
-  superUser: { id: '6ae38e7bb1bb56b09f96ce13', tag: 'SUPER_USER' },
-  genericUser: { id: '6ae38ef3b1bb56b09f96ce14', tag: 'GENERIC_USER' },
-  agent: { id: '6ae86ce7b01de16516693815', tag: 'AGENT' },
+  superUser: { id: '6ae38e7bb1bb56b09f96ce13', tag: 'SUPER_USER', label: { es: 'Super usuario', en: 'Super user' } },
+  genericUser: { id: '6ae38ef3b1bb56b09f96ce14', tag: 'GENERIC_USER', label: { es: 'Usuario', en: 'User' } },
+  agent: { id: '6ae86ce7b01de16516693815', tag: 'AGENT', label: { es: 'Agente', en: 'Agent' } },
 } as const;
+
+// Nombre del privilegio en el idioma de la interfaz; uno desconocido muestra el nombre del catalogo de C-TRD
+export function privilegeLabel(tag: string, name: string): string {
+  const known = Object.values(USER_PRIVILEGE).find((item) => item.tag === tag);
+  return known ? t(known.label) : name || tag;
+}
 
 // Igual que models.IsAgentOwner: el registro lo creo un agente
 export function isAgentOwner(record: RecordOwner): boolean {

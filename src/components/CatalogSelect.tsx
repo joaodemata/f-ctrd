@@ -1,7 +1,8 @@
 import { listCatalogs } from '../api/catalogs';
 import { useApiQuery } from '../hooks/useApiQuery';
-import type { Catalog, CatalogType } from '../models/catalog';
+import { catalogLabel, type Catalog, type CatalogType } from '../models/catalog';
 import { ErrorBanner } from './ErrorBanner';
+import { t } from '../i18n/language';
 
 interface CatalogSelectProps {
   type: CatalogType;
@@ -37,13 +38,17 @@ export function CatalogSelect({
         aria-invalid={invalid}
       >
         <option value="" disabled>
-          {catalogs.isLoading ? 'Cargando…' : options.length === 0 ? 'Sin opciones' : placeholder}
+          {catalogs.isLoading
+            ? t('Cargando…', 'Loading…')
+            : options.length === 0
+              ? t('Sin opciones', 'No options')
+              : placeholder}
         </option>
         {options.map((catalog) => {
           const reason = disabledReason?.(catalog) ?? null;
           return (
             <option key={catalog.id} value={catalog.id} disabled={reason !== null} title={catalog.description}>
-              {catalog.name}
+              {catalogLabel(catalog)}
               {reason ? ` (${reason})` : ''}
             </option>
           );

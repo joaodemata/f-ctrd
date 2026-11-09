@@ -12,6 +12,7 @@ import { ErrorBanner } from './ErrorBanner';
 import { FormField } from './FormField';
 import { Pagination } from './Pagination';
 import { StatusBadge } from './StatusBadge';
+import { t } from '../i18n/language';
 
 const DEFAULT_LIMIT = 10;
 // Limites de CreateAgentThesisFormat.thesis en C-TRD
@@ -30,11 +31,15 @@ type FieldErrors = Partial<Record<keyof CreateAgentThesisBody, string>>;
 
 function validate(values: ThesisFormValues): FieldErrors {
   const errors: FieldErrors = {};
-  if (!values.asset) errors.idAsset = 'Elige un asset.';
-  if (!values.action) errors.idAction = 'Elige una accion.';
+  if (!values.asset) errors.idAsset = t('Elige un asset.', 'Choose an asset.');
+  if (!values.action) errors.idAction = t('Elige una accion.', 'Choose an action.');
   const length = values.thesis.trim().length;
-  if (length < THESIS_MIN) errors.thesis = `La tesis debe tener al menos ${THESIS_MIN} caracteres.`;
-  if (length > THESIS_MAX) errors.thesis = `La tesis no puede superar ${THESIS_MAX} caracteres.`;
+  if (length < THESIS_MIN) {
+    errors.thesis = t(`La tesis debe tener al menos ${THESIS_MIN} caracteres.`, `The thesis must have at least ${THESIS_MIN} characters.`);
+  }
+  if (length > THESIS_MAX) {
+    errors.thesis = t(`La tesis no puede superar ${THESIS_MAX} caracteres.`, `The thesis cannot exceed ${THESIS_MAX} characters.`);
+  }
   return errors;
 }
 
@@ -99,22 +104,25 @@ export function AgentThesesPage() {
     <main className="page">
       <div className="page__head">
         <div>
-          <h1>Tesis de agentes</h1>
+          <h1>{t('Tesis de agentes', 'Agent theses')}</h1>
           <p className="muted small">
-            Ideas de inversion para los agentes. Cada viernes la corrida toma las {AGENT_THESES_PER_RUN} pendientes mas
-            antiguas y crea condiciones y un trigger que quedan pendientes de tu{' '}
-            <a href="#/agentes/revision">revision</a>.
+            {t(
+              `Ideas de inversion para los agentes. Cada viernes la corrida toma las ${AGENT_THESES_PER_RUN} pendientes mas antiguas y crea condiciones y un trigger que quedan pendientes de tu `,
+              `Investment ideas for the agents. Every Friday the run takes the ${AGENT_THESES_PER_RUN} oldest pending ones and creates conditions and a trigger that wait for your `,
+            )}
+            <a href="#/agentes/revision">{t('revision', 'review')}</a>.
           </p>
         </div>
         <a className="button" href="#/agentes/corridas">
-          Ver corridas
+          {t('Ver corridas', 'See runs')}
         </a>
       </div>
 
       {create.data && (
         <div className="success-banner" role="status">
           <span>
-            <strong>Tesis agregada a la cola.</strong> La procesara la proxima corrida con lugar disponible.
+            <strong>{t('Tesis agregada a la cola.', 'Thesis added to the queue.')}</strong>{' '}
+            {t('La procesara la proxima corrida con lugar disponible.', 'The next run with room will process it.')}
           </span>
         </div>
       )}
@@ -128,27 +136,33 @@ export function AgentThesesPage() {
             invalid={!!fieldError('idAsset')}
           />
         </FormField>
-        <FormField label="Accion" required error={fieldError('idAction')}>
+        <FormField label={t('Accion', 'Action')} required error={fieldError('idAction')}>
           <CatalogSelect
             type={CatalogType.Action}
             value={values.action}
             onChange={(action) => set('action', action)}
-            placeholder="Elige una accion"
+            placeholder={t('Elige una accion', 'Choose an action')}
             invalid={!!fieldError('idAction')}
           />
         </FormField>
         <FormField
-          label="Tesis"
+          label={t('Tesis', 'Thesis')}
           required
           error={fieldError('thesis')}
-          hint={`Idea, horizonte y contexto en texto libre. ${thesisLength} / ${THESIS_MAX} caracteres (minimo ${THESIS_MIN}).`}
+          hint={t(
+            `Idea, horizonte y contexto en texto libre. ${thesisLength} / ${THESIS_MAX} caracteres (minimo ${THESIS_MIN}).`,
+            `Idea, horizon and context in free text. ${thesisLength} / ${THESIS_MAX} characters (minimum ${THESIS_MIN}).`,
+          )}
         >
           <textarea
             value={values.thesis}
             onChange={(event) => set('thesis', event.target.value)}
             rows={5}
             maxLength={THESIS_MAX}
-            placeholder="Ej: BTC rebota cuando el RSI diario sale de sobreventa y el miedo del mercado es extremo; horizonte de 2 a 4 semanas."
+            placeholder={t(
+              'Ej: BTC rebota cuando el RSI diario sale de sobreventa y el miedo del mercado es extremo; horizonte de 2 a 4 semanas.',
+              'E.g.: BTC bounces when the daily RSI leaves oversold and market fear is extreme; 2 to 4 week horizon.',
+            )}
             aria-invalid={!!fieldError('thesis')}
           />
         </FormField>
@@ -157,7 +171,7 @@ export function AgentThesesPage() {
 
         <div className="form-actions">
           <button type="submit" className="button button--primary" disabled={create.isPending}>
-            {create.isPending ? 'Agregando…' : 'Agregar a la cola'}
+            {create.isPending ? t('Agregando…', 'Adding…') : t('Agregar a la cola', 'Add to queue')}
           </button>
           <button
             type="button"
@@ -170,17 +184,17 @@ export function AgentThesesPage() {
             }}
             disabled={create.isPending}
           >
-            Limpiar
+            {t('Limpiar', 'Clear')}
           </button>
         </div>
       </form>
 
       <section className="stack" aria-labelledby="theses-title">
         <div className="page__head">
-          <h2 id="theses-title">Cola de tesis</h2>
+          <h2 id="theses-title">{t('Cola de tesis', 'Thesis queue')}</h2>
           <div className="filters">
             <label className="field">
-              <span>Estado</span>
+              <span>{t('Estado', 'Status')}</span>
               <select
                 value={tagStatus}
                 onChange={(event) => {
@@ -188,19 +202,19 @@ export function AgentThesesPage() {
                   setPage(1);
                 }}
               >
-                <option value="">Todas</option>
+                <option value="">{t('Todas', 'All')}</option>
                 {AGENT_THESIS_STATUSES.map((status) => (
                   <option key={status.tag} value={status.tag}>
-                    {status.name}
+                    {t(status.label)}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span>Buscar</span>
+              <span>{t('Buscar', 'Search')}</span>
               <input
                 type="search"
-                placeholder="Tesis o asset"
+                placeholder={t('Tesis o asset', 'Thesis or asset')}
                 value={search}
                 maxLength={100}
                 onChange={(event) => {
@@ -217,11 +231,11 @@ export function AgentThesesPage() {
 
         <div className="panel" aria-busy={list.isLoading || list.isRefreshing}>
           {list.isLoading ? (
-            <p className="empty">Cargando tesis…</p>
+            <p className="empty">{t('Cargando tesis…', 'Loading theses…')}</p>
           ) : (
             list.data &&
             (list.data.theses.length === 0 ? (
-              <p className="empty">No hay tesis con estos filtros.</p>
+              <p className="empty">{t('No hay tesis con estos filtros.', 'No theses match these filters.')}</p>
             ) : (
               <>
                 <div className="table-wrap">
@@ -233,13 +247,13 @@ export function AgentThesesPage() {
                             #
                           </th>
                         )}
-                        <th scope="col">Tesis</th>
+                        <th scope="col">{t('Tesis', 'Thesis')}</th>
                         <th scope="col">Asset</th>
-                        <th scope="col">Accion</th>
-                        <th scope="col">Estado</th>
-                        <th scope="col">Creada</th>
-                        <th scope="col">Tomada</th>
-                        <th scope="col" aria-label="Acciones" />
+                        <th scope="col">{t('Accion', 'Action')}</th>
+                        <th scope="col">{t('Estado', 'Status')}</th>
+                        <th scope="col">{t('Creada', 'Created')}</th>
+                        <th scope="col">{t('Tomada', 'Claimed')}</th>
+                        <th scope="col" aria-label={t('Acciones', 'Actions')} />
                       </tr>
                     </thead>
                     <tbody>
@@ -249,10 +263,10 @@ export function AgentThesesPage() {
                         return (
                           <tr key={thesis.id} className="table__row" data-status={thesis.tagStatus}>
                             {showQueuePosition && (
-                              <td className="num" data-label="Posicion">
+                              <td className="num" data-label={t('Posicion', 'Position')}>
                                 {position}
                                 {position <= AGENT_THESES_PER_RUN && (
-                                  <div className="muted small">proxima corrida</div>
+                                  <div className="muted small">{t('proxima corrida', 'next run')}</div>
                                 )}
                               </td>
                             )}
@@ -260,12 +274,12 @@ export function AgentThesesPage() {
                               <span className="thesis-text">{thesis.thesis}</span>
                             </td>
                             <td data-label="Asset">{thesis.asset || thesis.tagAsset}</td>
-                            <td data-label="Accion">{thesis.action || thesis.tagAction}</td>
-                            <td data-label="Estado">
+                            <td data-label={t('Accion', 'Action')}>{thesis.action || thesis.tagAction}</td>
+                            <td data-label={t('Estado', 'Status')}>
                               <StatusBadge tag={thesis.tagStatus} label={thesis.status || thesis.tagStatus} />
                             </td>
-                            <td data-label="Creada">{formatDateTime(thesis.createdDate)}</td>
-                            <td data-label="Tomada">{formatDateTime(thesis.claimedAt)}</td>
+                            <td data-label={t('Creada', 'Created')}>{formatDateTime(thesis.createdDate)}</td>
+                            <td data-label={t('Tomada', 'Claimed')}>{formatDateTime(thesis.claimedAt)}</td>
                             <td className="cell--actions">
                               {pending && confirmDeleteId === thesis.id ? (
                                 <span className="review-buttons">
@@ -274,14 +288,14 @@ export function AgentThesesPage() {
                                     className="button button--danger button--small"
                                     onClick={() => void handleDelete(thesis.id)}
                                   >
-                                    Confirmar
+                                    {t('Confirmar', 'Confirm')}
                                   </button>
                                   <button
                                     type="button"
                                     className="button button--ghost button--small"
                                     onClick={() => setConfirmDeleteId(null)}
                                   >
-                                    Cancelar
+                                    {t('Cancelar', 'Cancel')}
                                   </button>
                                 </span>
                               ) : (
@@ -291,7 +305,7 @@ export function AgentThesesPage() {
                                       className="button button--small"
                                       href={`#/agentes/corridas?idThesis=${thesis.id}`}
                                     >
-                                      Corridas
+                                      {t('Corridas', 'Runs')}
                                     </a>
                                   )}
                                   {pending && (
@@ -301,7 +315,7 @@ export function AgentThesesPage() {
                                       onClick={() => setConfirmDeleteId(thesis.id)}
                                       disabled={deletingId !== null}
                                     >
-                                      {deletingId === thesis.id ? 'Borrando…' : 'Borrar'}
+                                      {deletingId === thesis.id ? t('Borrando…', 'Deleting…') : t('Borrar', 'Delete')}
                                     </button>
                                   )}
                                 </span>

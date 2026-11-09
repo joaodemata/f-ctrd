@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { t, type Localized } from '../i18n/language';
 
 export interface NavItem {
   path: string;
-  label: string;
+  label: Localized;
   // Texto bajo el nombre en el menu desplegable
-  description?: string;
+  description?: Localized;
   // Los items de un grupo van al menu desplegable en lugar de la barra
   group?: 'admin';
 }
@@ -34,7 +35,7 @@ export function NavBar({ items, currentPath }: NavBarProps) {
   }, [currentPath, items]);
 
   return (
-    <nav className="navbar" aria-label="Principal" ref={navRef}>
+    <nav className="navbar" aria-label={t('Principal', 'Main')} ref={navRef}>
       {mainItems.map((item) => {
         const current = item.path === currentPath;
         return (
@@ -45,11 +46,11 @@ export function NavBar({ items, currentPath }: NavBarProps) {
             aria-current={current ? 'page' : undefined}
             data-current={current}
           >
-            {item.label}
+            {t(item.label)}
           </a>
         );
       })}
-      {adminItems.length > 0 && <NavMenu label="Administracion" items={adminItems} currentPath={currentPath} />}
+      {adminItems.length > 0 && <NavMenu label={t('Administracion', 'Administration')} items={adminItems} currentPath={currentPath} />}
     </nav>
   );
 }
@@ -105,7 +106,7 @@ function NavMenu({ label, items, currentPath }: NavMenuProps) {
         </svg>
       </button>
       <div id={panelId} className="nav-menu__panel" hidden={!open}>
-        <p className="nav-menu__title">Solo super usuario</p>
+        <p className="nav-menu__title">{t('Solo super usuario', 'Super user only')}</p>
         <ul className="nav-menu__list">
           {items.map((item) => (
             <li key={item.path}>
@@ -115,8 +116,8 @@ function NavMenu({ label, items, currentPath }: NavMenuProps) {
                 aria-current={item.path === currentPath ? 'page' : undefined}
                 onClick={() => setOpen(false)}
               >
-                <span className="nav-menu__label">{item.label}</span>
-                {item.description && <span className="nav-menu__description">{item.description}</span>}
+                <span className="nav-menu__label">{t(item.label)}</span>
+                {item.description && <span className="nav-menu__description">{t(item.description)}</span>}
               </a>
             </li>
           ))}

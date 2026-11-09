@@ -9,6 +9,7 @@ import { CopyButton } from './CopyButton';
 import { ErrorBanner } from './ErrorBanner';
 import { Pagination } from './Pagination';
 import { StatusBadge } from './StatusBadge';
+import { t } from '../i18n/language';
 
 const DEFAULT_LIMIT = 10;
 const COLUMN_COUNT = 7;
@@ -19,7 +20,7 @@ function runDuration(run: AgentRun): string {
   const end = parseApiDate(run.finishedAt);
   if (!start || !end) return '';
   const minutes = Math.max(0, Math.round((end.getTime() - start.getTime()) / 60_000));
-  return minutes === 0 ? 'menos de 1m' : formatDuration(minutes);
+  return minutes === 0 ? t('menos de 1m', 'under 1m') : formatDuration(minutes);
 }
 
 function StepItem({ step }: { step: AgentRunStep }) {
@@ -32,10 +33,15 @@ function StepItem({ step }: { step: AgentRunStep }) {
       <div className="run-step__head">
         <strong>{agentLabel(step.agent)}</strong>
         <span className="muted small">
-          Intento {step.attempt} · {formatDateTime(step.createdAt)}
+          {t('Intento', 'Attempt')} {step.attempt} · {formatDateTime(step.createdAt)}
         </span>
         <span className={accepted ? 'run-step__result run-step__result--ok' : 'run-step__result'}>
-          {accepted ? 'Aceptada' : `${problems.length} problema${problems.length === 1 ? '' : 's'}`}
+          {accepted
+            ? t('Aceptada', 'Accepted')
+            : t(
+                `${problems.length} problema${problems.length === 1 ? '' : 's'}`,
+                `${problems.length} problem${problems.length === 1 ? '' : 's'}`,
+              )}
         </span>
       </div>
       {!accepted && (
@@ -46,7 +52,7 @@ function StepItem({ step }: { step: AgentRunStep }) {
         </ul>
       )}
       <details className="run-step__output">
-        <summary>Salida del agente</summary>
+        <summary>{t('Salida del agente', 'Agent output')}</summary>
         <div className="copy-row">
           <CopyButton text={output} />
         </div>
@@ -65,26 +71,26 @@ function RunDetail({ run }: { run: AgentRun }) {
     <div className="detail">
       <div className="detail__grid">
         <div>
-          <h4>Tesis</h4>
+          <h4>{t('Tesis', 'Thesis')}</h4>
           <p className="thesis-text">{run.thesis}</p>
           <p className="muted small">
-            <a href={`#/agentes/corridas?idThesis=${run.idThesis}`}>Todas las corridas de esta tesis</a>
+            <a href={`#/agentes/corridas?idThesis=${run.idThesis}`}>{t('Todas las corridas de esta tesis', 'All runs of this thesis')}</a>
           </p>
         </div>
         <div>
-          <h4>Fechas</h4>
+          <h4>{t('Fechas', 'Dates')}</h4>
           <dl className="kv">
-            <dt>Inicio</dt>
+            <dt>{t('Inicio', 'Start')}</dt>
             <dd>{formatDateTime(run.startedAt)}</dd>
-            <dt>Fin</dt>
-            <dd>{run.finishedAt ? formatDateTime(run.finishedAt) : 'en ejecucion'}</dd>
+            <dt>{t('Fin', 'End')}</dt>
+            <dd>{run.finishedAt ? formatDateTime(run.finishedAt) : t('en ejecucion', 'running')}</dd>
           </dl>
         </div>
         <div>
-          <h4>Resultado</h4>
+          <h4>{t('Resultado', 'Result')}</h4>
           {created ? (
             <dl className="kv">
-              <dt>Condiciones</dt>
+              <dt>{t('Condiciones', 'Conditions')}</dt>
               <dd>
                 {conditions.length === 0
                   ? '—'
@@ -98,11 +104,11 @@ function RunDetail({ run }: { run: AgentRun }) {
               <dd>{run.idTrigger ? <code className="small">{run.idTrigger}</code> : '—'}</dd>
             </dl>
           ) : (
-            <p className="muted">No creo condiciones ni trigger.</p>
+            <p className="muted">{t('No creo condiciones ni trigger.', 'It created no conditions or trigger.')}</p>
           )}
           {created && (
             <p className="small">
-              <a href="#/agentes/revision">Revisar lo pendiente</a>
+              <a href="#/agentes/revision">{t('Revisar lo pendiente', 'Review what is pending')}</a>
             </p>
           )}
         </div>
@@ -111,15 +117,21 @@ function RunDetail({ run }: { run: AgentRun }) {
       {run.error && (
         <div className="error-banner" role="alert">
           <div>
-            <strong>Error de la corrida</strong>
+            <strong>{t('Error de la corrida', 'Run error')}</strong>
             <p className="run-error">{run.error}</p>
           </div>
         </div>
       )}
 
-      <h4>Pasos de los agentes ({steps.length})</h4>
+      <h4>
+        {t('Pasos de los agentes', 'Agent steps')} ({steps.length})
+      </h4>
       {steps.length === 0 ? (
-        <p className="muted">{run.finishedAt ? 'La corrida no registro pasos.' : 'Los pasos se guardan al terminar la corrida.'}</p>
+        <p className="muted">
+          {run.finishedAt
+            ? t('La corrida no registro pasos.', 'The run recorded no steps.')
+            : t('Los pasos se guardan al terminar la corrida.', 'Steps are saved when the run finishes.')}
+        </p>
       ) : (
         <ol className="run-steps">
           {steps.map((step, index) => (
@@ -158,18 +170,20 @@ export function AgentRunsPage() {
     <main className="page">
       <div className="page__head">
         <div>
-          <h1>Corridas de agentes</h1>
+          <h1>{t('Corridas de agentes', 'Agent runs')}</h1>
           <p className="muted small">
-            Cada corrida procesa una tesis: los intentos de cada agente, los problemas que encontraron las validaciones
-            y lo que quedo pendiente de revision.
+            {t(
+              'Cada corrida procesa una tesis: los intentos de cada agente, los problemas que encontraron las validaciones y lo que quedo pendiente de revision.',
+              'Each run processes one thesis: the attempts of each agent, the problems the validations found and what was left pending review.',
+            )}
           </p>
         </div>
         <div className="form-actions">
           <button type="button" className="button" onClick={list.refetch} disabled={list.isLoading || list.isRefreshing}>
-            {list.isRefreshing ? 'Actualizando…' : 'Actualizar'}
+            {list.isRefreshing ? t('Actualizando…', 'Refreshing…') : t('Actualizar', 'Refresh')}
           </button>
           <a className="button" href="#/agentes/tesis">
-            Ver tesis
+            {t('Ver tesis', 'See theses')}
           </a>
         </div>
       </div>
@@ -177,17 +191,17 @@ export function AgentRunsPage() {
       {idThesis && (
         <p className="notice copy-row">
           <span>
-            Corridas de la tesis <code>{idThesis}</code>
+            {t('Corridas de la tesis', 'Runs of thesis')} <code>{idThesis}</code>
           </span>
           <a className="button button--small" href="#/agentes/corridas">
-            Ver todas
+            {t('Ver todas', 'See all')}
           </a>
         </p>
       )}
 
       <div className="filters">
         <label className="field">
-          <span>Estado</span>
+          <span>{t('Estado', 'Status')}</span>
           <select
             value={tagStatus}
             onChange={(event) => {
@@ -195,19 +209,19 @@ export function AgentRunsPage() {
               setPage(1);
             }}
           >
-            <option value="">Todos</option>
+            <option value="">{t('Todos', 'All')}</option>
             {AGENT_RUN_STATUSES.map((status) => (
               <option key={status.tag} value={status.tag}>
-                {status.name}
+                {t(status.label)}
               </option>
             ))}
           </select>
         </label>
         <label className="field field--grow">
-          <span>Buscar</span>
+          <span>{t('Buscar', 'Search')}</span>
           <input
             type="search"
-            placeholder="Tesis o asset"
+            placeholder={t('Tesis o asset', 'Thesis or asset')}
             value={search}
             maxLength={100}
             onChange={(event) => {
@@ -222,24 +236,24 @@ export function AgentRunsPage() {
 
       <section className="panel" aria-busy={list.isLoading || list.isRefreshing}>
         {list.isLoading ? (
-          <p className="empty">Cargando corridas…</p>
+          <p className="empty">{t('Cargando corridas…', 'Loading runs…')}</p>
         ) : (
           list.data &&
           (list.data.runs.length === 0 ? (
-            <p className="empty">No hay corridas con estos filtros.</p>
+            <p className="empty">{t('No hay corridas con estos filtros.', 'No runs match these filters.')}</p>
           ) : (
             <>
               <div className="table-wrap">
                 <table className="table table--cards">
                   <thead>
                     <tr>
-                      <th scope="col" aria-label="Expandir" />
-                      <th scope="col">Tesis</th>
+                      <th scope="col" aria-label={t('Expandir', 'Expand')} />
+                      <th scope="col">{t('Tesis', 'Thesis')}</th>
                       <th scope="col">Asset</th>
-                      <th scope="col">Accion</th>
-                      <th scope="col">Estado</th>
-                      <th scope="col">Inicio</th>
-                      <th scope="col">Resultado</th>
+                      <th scope="col">{t('Accion', 'Action')}</th>
+                      <th scope="col">{t('Estado', 'Status')}</th>
+                      <th scope="col">{t('Inicio', 'Start')}</th>
+                      <th scope="col">{t('Resultado', 'Result')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -255,7 +269,7 @@ export function AgentRunsPage() {
                                 type="button"
                                 className="icon-button"
                                 aria-expanded={expanded}
-                                aria-label={expanded ? 'Ocultar detalle' : 'Ver detalle'}
+                                aria-label={expanded ? t('Ocultar detalle', 'Hide details') : t('Ver detalle', 'Show details')}
                                 onClick={() => setExpandedId(expanded ? null : run.id)}
                               >
                                 {expanded ? '▾' : '▸'}
@@ -265,17 +279,20 @@ export function AgentRunsPage() {
                               <span className="thesis-text thesis-text--clamp">{run.thesis}</span>
                             </td>
                             <td data-label="Asset">{run.asset || run.tagAsset}</td>
-                            <td data-label="Accion">{run.action || run.tagAction}</td>
-                            <td data-label="Estado">
+                            <td data-label={t('Accion', 'Action')}>{run.action || run.tagAction}</td>
+                            <td data-label={t('Estado', 'Status')}>
                               <StatusBadge tag={run.tagStatus} label={run.status || run.tagStatus} />
                             </td>
-                            <td data-label="Inicio">
+                            <td data-label={t('Inicio', 'Start')}>
                               {formatDateTime(run.startedAt)}
                               {duration && <div className="muted small">{duration}</div>}
                             </td>
-                            <td data-label="Resultado">
-                              {conditions} condicion{conditions === 1 ? '' : 'es'}
-                              <div className="muted small">{run.idTrigger ? 'con trigger' : 'sin trigger'}</div>
+                            <td data-label={t('Resultado', 'Result')}>
+                              {conditions}{' '}
+                              {conditions === 1 ? t('condicion', 'condition') : t('condiciones', 'conditions')}
+                              <div className="muted small">
+                                {run.idTrigger ? t('con trigger', 'with trigger') : t('sin trigger', 'no trigger')}
+                              </div>
                             </td>
                           </tr>
                           {expanded && (

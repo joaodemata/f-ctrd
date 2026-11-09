@@ -34,11 +34,11 @@ export const CALENDAR_TIME_MODE_EXACT = 'exact';
 
 // Valores del parametro `type` de /api/market/* (el valor que devuelve cada simbolo en `type`), con su nombre en espanol
 export const MARKET_TYPES = [
-  { value: 'Crypto', label: 'Cripto' },
-  { value: 'Stock', label: 'Acciones' },
-  { value: 'Forex', label: 'Forex' },
-  { value: 'Commodity', label: 'Materias primas' },
-  { value: 'Index', label: 'Índices' },
+  { value: 'Crypto', label: { es: 'Cripto', en: 'Crypto' } },
+  { value: 'Stock', label: { es: 'Acciones', en: 'Stocks' } },
+  { value: 'Forex', label: { es: 'Forex', en: 'Forex' } },
+  { value: 'Commodity', label: { es: 'Materias primas', en: 'Commodities' } },
+  { value: 'Index', label: { es: 'Índices', en: 'Indices' } },
 ] as const;
 
 export type MarketType = (typeof MARKET_TYPES)[number]['value'];
