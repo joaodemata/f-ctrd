@@ -20,6 +20,7 @@ import {
   type VisibilityFieldErrors,
   type VisibilityFormValues,
 } from './VisibilityFields';
+import { t } from '../i18n/language';
 
 type CatalogOption = Pick<Catalog, 'id' | 'tag' | 'name'>;
 
@@ -82,20 +83,24 @@ type FieldErrors = Partial<Record<keyof TriggerFields, string>>;
 // Mismas reglas que CreateTriggerFormat / UpdateTriggerFormat en C-TRD, para avisar antes de enviar
 function validate(values: TriggerFormValues): FieldErrors {
   const errors: FieldErrors = {};
-  if (!values.tag.trim()) errors.tag = 'El tag es obligatorio.';
-  if (!values.name.trim()) errors.name = 'El nombre es obligatorio.';
-  if (!values.description.trim()) errors.description = 'La descripcion es obligatoria.';
-  if (!values.asset) errors.idAsset = 'Elige un asset.';
-  if (!values.action) errors.idAction = 'Elige una accion.';
-  if (!values.timeframe) errors.idCandlestickTimeframe = 'Elige una temporalidad.';
+  if (!values.tag.trim()) errors.tag = t('El tag es obligatorio.', 'The tag is required.');
+  if (!values.name.trim()) errors.name = t('El nombre es obligatorio.', 'The name is required.');
+  if (!values.description.trim()) errors.description = t('La descripcion es obligatoria.', 'The description is required.');
+  if (!values.asset) errors.idAsset = t('Elige un asset.', 'Choose an asset.');
+  if (!values.action) errors.idAction = t('Elige una accion.', 'Choose an action.');
+  if (!values.timeframe) errors.idCandlestickTimeframe = t('Elige una temporalidad.', 'Choose a timeframe.');
   const qty = Number(values.maxCandlestickQty);
-  if (!Number.isInteger(qty) || qty <= 0) errors.maxCandlestickQty = 'Debe ser un numero entero mayor a 0.';
-  if (new TextEncoder().encode(values.code).length > MAX_CODE_BYTES) errors.code = 'El codigo no puede superar 64 KB.';
+  if (!Number.isInteger(qty) || qty <= 0) {
+    errors.maxCandlestickQty = t('Debe ser un numero entero mayor a 0.', 'Must be a whole number greater than 0.');
+  }
+  if (new TextEncoder().encode(values.code).length > MAX_CODE_BYTES) {
+    errors.code = t('El codigo no puede superar 64 KB.', 'The code cannot exceed 64 KB.');
+  }
   return errors;
 }
 
 function timeframeDisabledReason(catalog: Catalog): string | null {
-  return TIMEFRAME_MINUTES[catalog.tag] === undefined ? 'sin duracion conocida' : null;
+  return TIMEFRAME_MINUTES[catalog.tag] === undefined ? t('sin duracion conocida', 'no known duration') : null;
 }
 
 interface TriggerFormProps {
@@ -181,7 +186,12 @@ export function TriggerForm({
   return (
     <form className="panel panel--padded form" onSubmit={handleSubmit} noValidate>
       <div className="form-grid">
-        <FormField label="Tag" required error={fieldError('tag')} hint="Identificador unico del trigger.">
+        <FormField
+          label="Tag"
+          required
+          error={fieldError('tag')}
+          hint={t('Identificador unico del trigger.', 'Unique identifier of the trigger.')}
+        >
           <input
             value={values.tag}
             onChange={(event) => set('tag', event.target.value)}
@@ -190,18 +200,23 @@ export function TriggerForm({
             aria-invalid={!!fieldError('tag')}
           />
         </FormField>
-        <FormField label="Nombre" required error={fieldError('name')}>
+        <FormField label={t('Nombre', 'Name')} required error={fieldError('name')}>
           <input
             value={values.name}
             onChange={(event) => set('name', event.target.value)}
-            placeholder="RSI en sobreventa"
+            placeholder={t('RSI en sobreventa', 'Oversold RSI')}
             maxLength={200}
             aria-invalid={!!fieldError('name')}
           />
         </FormField>
       </div>
 
-      <FormField label="Descripcion" required error={fieldError('description')} hint="Que principio utiliza el trigger.">
+      <FormField
+        label={t('Descripcion', 'Description')}
+        required
+        error={fieldError('description')}
+        hint={t('Que principio utiliza el trigger.', 'What principle the trigger uses.')}
+      >
         <textarea
           value={values.description}
           onChange={(event) => set('description', event.target.value)}
@@ -216,30 +231,34 @@ export function TriggerForm({
       </FormField>
 
       <div className="form-grid">
-        <FormField label="Accion" required error={fieldError('idAction')}>
+        <FormField label={t('Accion', 'Action')} required error={fieldError('idAction')}>
           <CatalogSelect
             type={CatalogType.Action}
             value={values.action}
             onChange={(action) => set('action', action)}
-            placeholder="Elige una accion"
+            placeholder={t('Elige una accion', 'Choose an action')}
             invalid={!!fieldError('idAction')}
           />
         </FormField>
-        <FormField label="Temporalidad de vela" required error={fieldError('idCandlestickTimeframe')}>
+        <FormField label={t('Temporalidad de vela', 'Candle timeframe')} required error={fieldError('idCandlestickTimeframe')}>
           <CatalogSelect
             type={CatalogType.CandleStick}
             value={values.timeframe}
             onChange={(timeframe) => set('timeframe', timeframe)}
-            placeholder="Elige una temporalidad"
+            placeholder={t('Elige una temporalidad', 'Choose a timeframe')}
             disabledReason={timeframeDisabledReason}
             invalid={!!fieldError('idCandlestickTimeframe')}
           />
         </FormField>
         <FormField
-          label="Maximo de velas"
+          label={t('Maximo de velas', 'Max candles')}
           required
           error={fieldError('maxCandlestickQty')}
-          hint={expiration ? `Las oportunidades expiran tras ${expiration}.` : 'Velas hasta que la oportunidad expira.'}
+          hint={
+            expiration
+              ? t(`Las oportunidades expiran tras ${expiration}.`, `Opportunities expire after ${expiration}.`)
+              : t('Velas hasta que la oportunidad expira.', 'Candles until the opportunity expires.')
+          }
         >
           <input
             type="number"
@@ -254,13 +273,15 @@ export function TriggerForm({
       </div>
 
       <FormField
-        label={`Condiciones (${values.conditions.length})`}
+        label={`${t('Condiciones', 'Conditions')} (${values.conditions.length})`}
         as="fieldset"
         error={fieldError('conditions')}
         hint={
           <>
-            Opcional. La oportunidad pasa a <strong>Activa</strong> cuando se cumplen todas.{' '}
-            <a href="#/condiciones">Crear una condicion</a>
+            {t('Opcional. La oportunidad pasa a ', 'Optional. The opportunity becomes ')}
+            <strong>{t('Activa', 'Active')}</strong>
+            {t(' cuando se cumplen todas.', ' when all of them are met.')}{' '}
+            <a href="#/condiciones">{t('Crear una condicion', 'Create a condition')}</a>
           </>
         }
       >
@@ -268,11 +289,13 @@ export function TriggerForm({
       </FormField>
 
       <FormField
-        label="Codigo (Pine de TradingView)"
+        label={t('Codigo (Pine de TradingView)', 'Code (TradingView Pine)')}
         error={fieldError('code')}
         hint={
           <>
-            Opcional. <code>{TRIGGER_CODE_WEBHOOK_PLACEHOLDER}</code> se reemplaza por el ID del webhook al guardar.
+            {t('Opcional. ', 'Optional. ')}
+            <code>{TRIGGER_CODE_WEBHOOK_PLACEHOLDER}</code>
+            {t(' se reemplaza por el ID del webhook al guardar.', ' is replaced with the webhook ID on save.')}
             {codeHint && <> {codeHint}</>}
           </>
         }
@@ -292,7 +315,10 @@ export function TriggerForm({
           values={values.visibility}
           onChange={(visibility) => set('visibility', visibility)}
           errors={{ ...serverVisibilityErrors, ...visibilityErrors }}
-          note="Las oportunidades del trigger copian su visibilidad y se mantiene al actualizarlo."
+          note={t(
+            'Las oportunidades del trigger copian su visibilidad y se mantiene al actualizarlo.',
+            'The trigger\'s opportunities copy its visibility, and it is kept when the trigger is updated.',
+          )}
         />
       )}
 

@@ -400,6 +400,17 @@ p {
   margin-left: auto;
 }
 
+/* Idioma (LanguageSwitch.tsx) */
+
+.segmented.language-switch {
+  flex: none;
+  --tone: var(--text);
+}
+
+.segmented.language-switch button {
+  padding: 3px 8px;
+}
+
 /* Sesion */
 
 .session-menu {
@@ -2396,6 +2407,11 @@ a {
     padding-top: 8px;
     padding-bottom: 8px;
     row-gap: 6px;
+  }
+
+  /* Junto a la sesion, a la derecha de la marca */
+  .language-switch {
+    margin-left: auto;
   }
 
   .navbar {

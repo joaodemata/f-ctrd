@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ReviewDecision } from '../models/agent';
+import { t } from '../i18n/language';
 
 interface ReviewButtonsProps {
   onDecision: (decision: ReviewDecision) => void;
@@ -19,8 +20,8 @@ export function ReviewButtons({ onDecision, pendingDecision, disabled = false, a
 
   if (confirmingReject) {
     return (
-      <span className="review-buttons" role="group" aria-label="Confirmar rechazo">
-        <span className="small">Rechazar no se puede deshacer.</span>
+      <span className="review-buttons" role="group" aria-label={t('Confirmar rechazo', 'Confirm rejection')}>
+        <span className="small">{t('Rechazar no se puede deshacer.', 'Rejecting cannot be undone.')}</span>
         <button
           type="button"
           className="button button--danger"
@@ -30,17 +31,17 @@ export function ReviewButtons({ onDecision, pendingDecision, disabled = false, a
           }}
           disabled={busy}
         >
-          Confirmar rechazo
+          {t('Confirmar rechazo', 'Confirm rejection')}
         </button>
         <button type="button" className="button button--ghost" onClick={() => setConfirmingReject(false)}>
-          Cancelar
+          {t('Cancelar', 'Cancel')}
         </button>
       </span>
     );
   }
 
   return (
-    <span className="review-buttons" role="group" aria-label="Revision">
+    <span className="review-buttons" role="group" aria-label={t('Revision', 'Review')}>
       <button
         type="button"
         className="button button--primary"
@@ -48,10 +49,10 @@ export function ReviewButtons({ onDecision, pendingDecision, disabled = false, a
         disabled={busy}
         title={approveHint}
       >
-        {pendingDecision === ReviewDecision.Approve ? 'Aprobando…' : 'Aprobar'}
+        {pendingDecision === ReviewDecision.Approve ? t('Aprobando…', 'Approving…') : t('Aprobar', 'Approve')}
       </button>
       <button type="button" className="button" onClick={() => setConfirmingReject(true)} disabled={busy}>
-        {pendingDecision === ReviewDecision.Reject ? 'Rechazando…' : 'Rechazar'}
+        {pendingDecision === ReviewDecision.Reject ? t('Rechazando…', 'Rejecting…') : t('Rechazar', 'Reject')}
       </button>
     </span>
   );

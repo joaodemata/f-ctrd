@@ -1,3 +1,5 @@
+import { currentLanguage } from '../i18n/language';
+
 // Traduccion al espanol de los nombres del calendario economico de biquote, que solo existe en ingles (la API no
 // acepta idioma). Se traducen los nombres conocidos de alto impacto; uno nuevo se muestra en ingles hasta agregarlo
 // aqui. El nombre original queda siempre como tooltip
@@ -73,6 +75,8 @@ const PATTERNS: { pattern: RegExp; translate: (institution: string, rest: string
 ];
 
 export function translateEventName(name: string): string {
+  // En ingles se muestra el nombre original de biquote
+  if (currentLanguage() === 'en') return name;
   const suffixMatch = /\s+(m\/m|q\/q|y\/y)$/.exec(name);
   const base = suffixMatch ? name.slice(0, suffixMatch.index) : name;
   const suffix = suffixMatch?.[1] ? ` ${PERIOD_SUFFIX[suffixMatch[1]] ?? suffixMatch[1]}` : '';

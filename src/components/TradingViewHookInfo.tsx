@@ -1,5 +1,6 @@
 import { apiBaseUrl } from '../api/config';
 import { CopyButton } from './CopyButton';
+import { t } from '../i18n/language';
 
 // Datos para configurar la alerta de TradingView de un trigger (POST /hook/trigger con el idWebhook).
 // C-TRD solo envia el idWebhook al crear o actualizar el trigger, los listados no lo incluyen
@@ -7,7 +8,7 @@ export function TradingViewHookInfo({ idWebhook }: { idWebhook: string }) {
   const hookBody = JSON.stringify({ idWebhook });
   return (
     <dl className="kv kv--wide">
-      <dt>ID del webhook</dt>
+      <dt>{t('ID del webhook', 'Webhook ID')}</dt>
       <dd className="copy-row">
         <code>{idWebhook}</code>
         <CopyButton text={idWebhook} />
@@ -16,7 +17,7 @@ export function TradingViewHookInfo({ idWebhook }: { idWebhook: string }) {
       <dd className="copy-row">
         <code>POST {apiBaseUrl}/hook/trigger</code>
       </dd>
-      <dt>Body de la alerta</dt>
+      <dt>{t('Body de la alerta', 'Alert body')}</dt>
       <dd className="copy-row">
         <code>{hookBody}</code>
         <CopyButton text={hookBody} />

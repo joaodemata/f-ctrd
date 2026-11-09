@@ -2,6 +2,7 @@ import { listCallbacks } from '../api/callbacks';
 import { useApiQuery } from '../hooks/useApiQuery';
 import type { CallbackInfo } from '../models/apiDefinition';
 import { ErrorBanner } from './ErrorBanner';
+import { t } from '../i18n/language';
 
 interface CallbackSelectProps {
   responseFormat: string;
@@ -27,7 +28,11 @@ export function CallbackSelect({ responseFormat, value, onChange, invalid = fals
         aria-invalid={invalid}
       >
         <option value="" disabled>
-          {callbacks.isLoading ? 'Cargando…' : options.length === 0 ? 'Ningun callback lee esta API' : 'Elige un callback'}
+          {callbacks.isLoading
+            ? t('Cargando…', 'Loading…')
+            : options.length === 0
+              ? t('Ningun callback lee esta API', 'No callback reads this API')
+              : t('Elige un callback', 'Choose a callback')}
         </option>
         {options.map((callback) => (
           <option key={callback.id} value={callback.id}>
@@ -35,7 +40,11 @@ export function CallbackSelect({ responseFormat, value, onChange, invalid = fals
           </option>
         ))}
       </select>
-      {selected && <span className="form-field__hint">Se cumple cuando: {selected.description}</span>}
+      {selected && (
+        <span className="form-field__hint">
+          {t('Se cumple cuando:', 'Met when:')} {selected.description}
+        </span>
+      )}
       {callbacks.error && <ErrorBanner error={callbacks.error} onRetry={callbacks.refetch} stale={!!callbacks.data} />}
     </>
   );

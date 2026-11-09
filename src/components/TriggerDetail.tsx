@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { TIMEFRAME_MINUTES } from '../models/catalog';
+import { catalogLabel, TIMEFRAME_MINUTES } from '../models/catalog';
 import { previousTriggerId, triggerRootId, TriggerStatusTag, type Trigger } from '../models/trigger';
 import { formatDateTime, formatDuration } from '../utils/format';
 import { CopyButton } from './CopyButton';
 import { RecordAccess } from './RecordAccess';
+import { t } from '../i18n/language';
 
 interface TriggerDetailProps {
   trigger: Trigger;
@@ -25,50 +26,64 @@ export function TriggerDetail({ trigger, onEdit, actions }: TriggerDetailProps) 
     <div className="detail">
       <div className="detail__grid">
         <div>
-          <h4>Descripcion</h4>
+          <h4>{t('Descripcion', 'Description')}</h4>
           <p>{trigger.description || '—'}</p>
         </div>
         <div>
-          <h4>Velas</h4>
+          <h4>{t('Velas', 'Candles')}</h4>
           <p>
-            Maximo {trigger.maxCandlestickQty} de {trigger.candlestickTimeframe || trigger.tagCandlestickTimeframe}
+            {t('Maximo', 'Max')} {trigger.maxCandlestickQty} {t('de', 'of')}{' '}
+            {catalogLabel({
+              tag: trigger.tagCandlestickTimeframe,
+              name: trigger.candlestickTimeframe || trigger.tagCandlestickTimeframe,
+            })}
           </p>
           {candleMinutes !== undefined && (
-            <p className="muted">Las oportunidades expiran tras {formatDuration(candleMinutes * trigger.maxCandlestickQty)}.</p>
+            <p className="muted">
+              {t('Las oportunidades expiran tras', 'Opportunities expire after')}{' '}
+              {formatDuration(candleMinutes * trigger.maxCandlestickQty)}.
+            </p>
           )}
         </div>
         <div>
-          <h4>Fechas</h4>
+          <h4>{t('Fechas', 'Dates')}</h4>
           <dl className="kv">
-            <dt>Creado</dt>
+            <dt>{t('Creado', 'Created')}</dt>
             <dd>{formatDateTime(trigger.createdDate)}</dd>
-            <dt>Actualizado</dt>
+            <dt>{t('Actualizado', 'Updated')}</dt>
             <dd>{formatDateTime(trigger.lastUpdatedAt)}</dd>
           </dl>
         </div>
         <div>
-          <h4>Versiones</h4>
+          <h4>{t('Versiones', 'Versions')}</h4>
           {previousId ? (
             <dl className="kv">
-              <dt>Anterior</dt>
+              <dt>{t('Anterior', 'Previous')}</dt>
               <dd>
                 <code className="small">{previousId}</code>
               </dd>
-              <dt>Original</dt>
+              <dt>{t('Original', 'Original')}</dt>
               <dd>
                 <code className="small">{trigger.idReferenceRoot ?? '—'}</code>
               </dd>
             </dl>
           ) : (
-            <p className="muted">Version original, nunca se actualizo.</p>
+            <p className="muted">{t('Version original, nunca se actualizo.', 'Original version, never updated.')}</p>
           )}
         </div>
         <RecordAccess record={trigger} />
       </div>
 
-      <h4>Condiciones ({conditions.length})</h4>
+      <h4>
+        {t('Condiciones', 'Conditions')} ({conditions.length})
+      </h4>
       {conditions.length === 0 ? (
-        <p className="muted">Sin condiciones: las oportunidades se activan solo con el trigger.</p>
+        <p className="muted">
+          {t(
+            'Sin condiciones: las oportunidades se activan solo con el trigger.',
+            'No conditions: opportunities are activated by the trigger alone.',
+          )}
+        </p>
       ) : (
         <ol className="conditions conditions--plain">
           {conditions.map((condition) => (
@@ -86,7 +101,7 @@ export function TriggerDetail({ trigger, onEdit, actions }: TriggerDetailProps) 
       {trigger.pineCode && (
         <>
           <h4 className="copy-row">
-            Codigo Pine
+            {t('Codigo Pine', 'Pine code')}
             <CopyButton text={trigger.pineCode} />
           </h4>
           <pre className="code-block">{trigger.pineCode}</pre>
@@ -98,14 +113,19 @@ export function TriggerDetail({ trigger, onEdit, actions }: TriggerDetailProps) 
         {onEdit &&
           (editable ? (
             <button type="button" className="button button--primary" onClick={() => onEdit(trigger)}>
-              Editar trigger
+              {t('Editar trigger', 'Edit trigger')}
             </button>
           ) : (
-            <p className="muted small">Version inactiva o reemplazada: solo se puede editar la version activa.</p>
+            <p className="muted small">
+              {t(
+                'Version inactiva o reemplazada: solo se puede editar la version activa.',
+                'Inactive or replaced version: only the active version can be edited.',
+              )}
+            </p>
           ))}
         {previousId && (
           <a className="button" href={`#/triggers/versiones?id=${triggerRootId(trigger)}`}>
-            Mostrar detalle de versiones
+            {t('Mostrar detalle de versiones', 'Show version details')}
           </a>
         )}
       </div>

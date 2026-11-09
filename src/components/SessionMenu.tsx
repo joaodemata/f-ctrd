@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useHashRoute } from '../hooks/useHashRoute';
-import { userDisplayName } from '../models/user';
+import { privilegeLabel, userDisplayName } from '../models/user';
+import { t } from '../i18n/language';
 
 // Usuario de la sesion y acceso al login en la barra superior
 export function SessionMenu() {
@@ -10,14 +11,14 @@ export function SessionMenu() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   if (auth.status === 'checking') {
-    return <span className="session-menu muted small">Verificando sesion…</span>;
+    return <span className="session-menu muted small">{t('Verificando sesion…', 'Checking session…')}</span>;
   }
 
   if (!auth.user) {
     if (path === '/login') return null;
     return (
       <a className="button button--small session-menu" href="#/login">
-        Iniciar sesion
+        {t('Iniciar sesion', 'Log in')}
       </a>
     );
   }
@@ -29,12 +30,12 @@ export function SessionMenu() {
 
   return (
     <span className="session-menu">
-      <span className="session-menu__user" title={auth.user.namePrivilege}>
+      <span className="session-menu__user" title={privilegeLabel(auth.user.tagPrivilege, auth.user.namePrivilege)}>
         {userDisplayName(auth.user)}
         {auth.isSuperUser && <span className="session-menu__badge">Super</span>}
       </span>
       <button type="button" className="button button--small" onClick={handleLogout} disabled={isLoggingOut}>
-        {isLoggingOut ? 'Cerrando…' : 'Cerrar sesion'}
+        {isLoggingOut ? t('Cerrando…', 'Logging out…') : t('Cerrar sesion', 'Log out')}
       </button>
     </span>
   );
