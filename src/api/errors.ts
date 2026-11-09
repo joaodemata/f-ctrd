@@ -4,6 +4,7 @@ import type { ApiResponse, FormatErrorData } from './types';
 export type ApiErrorKind =
   | 'validation' // el backend rechazo el formato (tracking CC00x con data por campo)
   | 'api' // el backend respondio status FAIL
+  | 'rateLimit' // el backend rechazo la peticion por exceso de peticiones (429, CMMRLE001)
   | 'network' // no hubo respuesta (servidor caido, CORS bloqueado, sin red)
   | 'timeout' // se supero el tiempo de espera
   | 'aborted' // la peticion fue cancelada por el propio frontend
@@ -17,11 +18,16 @@ export const FrontendTracking = {
   aborted: 'FAPICLE003',
   parse: 'FAPICLE004',
   unknown: 'FAPICLE005',
+  // Una API externa (biquote) respondio un error HTTP
+  external: 'FAPICLE006',
+  // Una API externa rechazo la peticion por exceso de peticiones (429)
+  externalRateLimit: 'FAPICLE007',
 } as const;
 
 const defaultMessages: Record<ApiErrorKind, string> = {
   validation: 'Los datos enviados no tienen el formato esperado.',
   api: 'El servidor no pudo completar la operacion.',
+  rateLimit: 'Demasiadas peticiones, intenta mas tarde.',
   network: 'No se pudo conectar con el servidor C-TRD.',
   timeout: 'El servidor tardo demasiado en responder.',
   aborted: 'La peticion fue cancelada.',
@@ -35,8 +41,12 @@ export interface ApiErrorInit {
   httpStatus?: number | null;
   fieldErrors?: Record<string, string>;
   details?: string[];
+  retryAfterSeconds?: number | null;
   cause?: unknown;
 }
+
+// Rate limit de C-TRD (common/rate_limit.go): 429 con data.retryAfterSeconds
+export const RATE_LIMIT_TRACKING = 'CMMRLE001';
 
 export class ApiError extends Error {
   readonly kind: ApiErrorKind;
@@ -45,6 +55,8 @@ export class ApiError extends Error {
   // Mensajes por campo cuando kind es 'validation' (clave = nombre json del campo)
   readonly fieldErrors: Record<string, string>;
   readonly details: string[];
+  // Segundos que pide esperar C-TRD cuando kind es 'rateLimit'
+  readonly retryAfterSeconds: number | null;
   readonly cause?: unknown;
 
   constructor(init: ApiErrorInit) {
@@ -55,6 +67,7 @@ export class ApiError extends Error {
     this.httpStatus = init.httpStatus ?? null;
     this.fieldErrors = init.fieldErrors ?? {};
     this.details = init.details ?? [];
+    this.retryAfterSeconds = init.retryAfterSeconds ?? null;
     this.cause = init.cause;
   }
 
@@ -70,8 +83,24 @@ function isFormatErrorData(data: unknown): data is FormatErrorData {
   return Array.isArray(candidate.details) && typeof candidate.error === 'string';
 }
 
+function readRetryAfterSeconds(data: unknown): number | null {
+  if (typeof data !== 'object' || data === null) return null;
+  const value = (data as { retryAfterSeconds?: unknown }).retryAfterSeconds;
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
+}
+
 // Convierte una respuesta FAIL de C-TRD en un ApiError
 export function apiErrorFromResponse(httpStatus: number, body: ApiResponse<unknown>): ApiError {
+  if (httpStatus === 429 || body.tracking === RATE_LIMIT_TRACKING) {
+    return new ApiError({
+      kind: 'rateLimit',
+      message: body.message,
+      tracking: body.tracking,
+      httpStatus,
+      retryAfterSeconds: readRetryAfterSeconds(body.data),
+    });
+  }
+
   if (isFormatErrorData(body.data)) {
     const fieldErrors: Record<string, string> = {};
     for (const [field, value] of Object.entries(body.data)) {
@@ -90,6 +119,27 @@ export function apiErrorFromResponse(httpStatus: number, body: ApiResponse<unkno
   }
 
   return new ApiError({ kind: 'api', message: body.message, tracking: body.tracking, httpStatus });
+}
+
+// Convierte una respuesta de error de una API externa. biquote responde { error } y en 429 el header Retry-After
+export function apiErrorFromExternalResponse(response: Response, body: unknown): ApiError {
+  const message =
+    typeof body === 'object' && body !== null && typeof (body as { error?: unknown }).error === 'string'
+      ? (body as { error: string }).error
+      : undefined;
+
+  if (response.status === 429) {
+    const retryAfter = Number(response.headers.get('Retry-After'));
+    return new ApiError({
+      kind: 'rateLimit',
+      message,
+      tracking: FrontendTracking.externalRateLimit,
+      httpStatus: 429,
+      retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null,
+    });
+  }
+
+  return new ApiError({ kind: 'api', message, tracking: FrontendTracking.external, httpStatus: response.status });
 }
 
 // Convierte cualquier excepcion de fetch en un ApiError

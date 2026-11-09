@@ -1,6 +1,6 @@
 # F-CTRD
 
-F-CTRD is the web frontend of C-TRD (`C:\Users\pc\projects\C-TRD`). It only consumes the C-TRD HTTP API; it has no backend or database of its own.
+F-CTRD is the web frontend of C-TRD (`C:\Users\pc\projects\C-TRD`). It consumes the C-TRD HTTP API and, as the only exception, the public biquote API (economic calendar and market movers, see below); it has no backend or database of its own.
 
 ## Stack
 
@@ -25,7 +25,8 @@ C-TRD must be running on `VITE_API_BASE_URL` (default `http://localhost:8080`): 
 Copy `.env.example` to `.env.local`:
 
 - `VITE_API_BASE_URL`: base URL of the C-TRD server
-- `VITE_POLL_INTERVAL_MS`: dashboard auto-refresh, `0` disables it. Polling pauses while the tab is hidden
+- `VITE_POLL_INTERVAL_MS`: dashboard fallback refresh while the `/ws` websocket is down, `0` disables it. Polling pauses while the tab is hidden
+- `VITE_BIQUOTE_BASE_URL`: base URL of the public biquote API (default `https://biquote.io`)
 
 CORS lives in C-TRD (`common/cors.go`). The allowed origins come from `JM_CTRD_CORS_ORIGINS` (comma-separated) and default to `http://localhost:5173`. Serving the frontend from another origin means adding it there.
 
@@ -38,23 +39,29 @@ Same branches and promotion flow as C-TRD: `develop` → `qa` → `sandbox` (pre
 - `src/api/`: the only place that talks to the network
   - `types.ts`: `ApiResponse<T>` (mirror of C-TRD `APIResponse`), `ApiResult<T>`, `RequestOptions`
   - `errors.ts`: `ApiError` and the converters from a FAIL response or from a fetch exception
-  - `client.ts`: `request()` / `api.get|post|put|patch|delete`: timeout, abort, query serialization, response parsing
+  - `client.ts`: `request()` / `api.get|post|put|patch|delete`: timeout, abort, query serialization, response parsing. `externalGet()` is the same for public external APIs (no envelope, no session token)
   - `config.ts`: reads `VITE_*` env vars
   - `session.ts`: session token in `localStorage` (`fctrd.session`); `client.ts` sends it as `Authorization: Bearer` and clears it when C-TRD answers an invalid-session tracking (`INVALID_SESSION_TRACKINGS`)
+  - `biquote.ts`: biquote endpoints (`listCalendarEvents`, `listMarketGainers`, `listMarketLosers`); models in `models/biquote.ts`
+  - `events.ts`: the `/ws` websocket (URL derived from `VITE_API_BASE_URL`). One shared socket for every subscriber, reconnects with exponential backoff (max 30 s); `ServerEventType` mirrors the C-TRD event constants
   - `<resource>.ts`: one file per C-TRD resource (e.g. `opportunities.ts`) with typed endpoint functions
 - `src/models/`: TypeScript mirrors of the C-TRD models (`models/*.go` json tags) and catalogs (`common/constants.go`)
 - `src/hooks/useApiQuery.ts`: standard hook for reads: loading/refreshing/error state, abort on unmount, polling
 - `src/hooks/useApiMutation.ts`: standard hook for writes (create, upload): `run(input)`, pending/error/data, abort on unmount
+- `src/hooks/useServerEvent.ts`: `useServerEvent(typeEvent, onEvent)` calls `onEvent` on that event and after a reconnect (events may have been lost); returns whether the socket is open
+- `src/hooks/useMediaQuery.ts`: `useMediaQuery(query)` for layouts that change markup (not just CSS) on small screens
 - `src/hooks/useAuth.tsx`: `AuthProvider` (in `main.tsx`) and `useAuth()`: `status`, `user`, `isSuperUser`, `login`, `logout`. Validates the stored token with `/auth/me` on load
 - `src/hooks/useHashRoute.ts`: hash navigation (`#/triggers/nuevo`); `useHashParams()` reads params after the path (`#/triggers/versiones?id=...`). Routes and navbar items are the `ROUTES` table in `App.tsx`; routes with `navPath` are detail views hidden from the navbar; routes with `superUser` are hidden from the navbar and render `RestrictedPage` unless the session is the super user. Admin flows (`group: 'admin'` + `description`) go in the navbar's "Administracion" dropdown instead of the bar: add new super-user flows there
-- `src/components/`: UI. One `*Page.tsx` per route: `Dashboard.tsx` (opportunities, owns filters/pagination), `TriggersPage.tsx` (active triggers, detail and edit via `TriggerEdit`), `TriggerVersionsPage.tsx` (all versions of one trigger), `TriggerPage.tsx` (create), `ConditionPage.tsx`, `GoogleTrendsPage.tsx`, `AgentThesesPage.tsx` (agents thesis queue), `AgentRunsPage.tsx` (agent runs and their steps, `?idThesis=`), `AgentReviewPage.tsx` (approve/reject what the agents create, `ReviewButtons`), `HelpPage.tsx` (functional help: opportunity life cycle, conditions, callbacks; it describes C-TRD behavior, so update it when the hook, the cronjobs or the callbacks change; the extended guide (TradingView, n8n and other webhook sources, examples, links) is `HelpGuide.tsx`, long parts go in `<More>`/`<details>`, and "Descargar PDF" opens them all and prints with the `@media print` styles). Shared form pieces: `FormField`, `TriggerForm` (create and update), `VisibilityFields` (create trigger and condition), `AssetPicker`, `CatalogSelect`, `ConditionPicker`, `ApiParameterInput`. `RecordAccess` shows owner and visibility in detail panels
+- `src/components/`: UI. One `*Page.tsx` per route: `Dashboard.tsx` (opportunities, owns filters/pagination; shows `MarketMoversBanner` on top (ticker moved with `requestAnimationFrame` at 20 px/s plus ‹ › arrows of 240 px, pauses on hover, only the arrows move it under `prefers-reduced-motion`; `$` on every price except `Forex` and `Index`; market type filter `MARKET_TYPES` from `models/biquote.ts` sent as `type`, last choice in `localStorage` `fctrd.marketType`) and `EconomicCalendarPanel` as a collapsible side panel; the title has an "En vivo" badge and the notes inside `InfoPopover` ("i" button). Small screens use different markup, chosen with `useMediaQuery` (`hooks/useMediaQuery.ts`, `PHONE_QUERY` 640px / `NARROW_QUERY` 1000px, same breakpoints as `styles.css`): up to 1000px the calendar is a one-line bar with the next release that opens a `<dialog>` bottom sheet; up to 640px the banner shows one ticker with a Ganadores/Perdedores toggle and the market type as a `<select>`), `TriggersPage.tsx` (active triggers, detail and edit via `TriggerEdit`), `TriggerVersionsPage.tsx` (all versions of one trigger), `TriggerPage.tsx` (create), `ConditionPage.tsx`, `GoogleTrendsPage.tsx`, `AgentThesesPage.tsx` (agents thesis queue), `AgentRunsPage.tsx` (agent runs and their steps, `?idThesis=`), `AgentReviewPage.tsx` (approve/reject what the agents create, `ReviewButtons`), `HelpPage.tsx` (functional help: opportunity life cycle, conditions, callbacks; it describes C-TRD behavior, so update it when the hook, the cronjobs or the callbacks change; the extended guide (TradingView, n8n and other webhook sources, examples, links) is `HelpGuide.tsx`, long parts go in `<More>`/`<details>`, and "Descargar PDF" opens them all and prints with the `@media print` styles). Shared form pieces: `FormField`, `TriggerForm` (create and update), `VisibilityFields` (create trigger and condition), `AssetPicker`, `CatalogSelect`, `ConditionPicker`, `ApiParameterInput`. `RecordAccess` shows owner and visibility in detail panels
 - `src/utils/format.ts`: date, price and regex helpers
+- `src/utils/calendarNames.ts`: `translateEventName()`, Spanish names for the biquote calendar (English only, no language param). Unknown names fall back to English; add new high-impact releases there. The original name stays as tooltip
+- `components/Disclaimer.tsx`: legal notice (no liability for the user's trades, gains or losses) rendered in `App.tsx` under every page
 
 ## Request / response contract
 
 - Every call goes through `src/api/client.ts`. Components and hooks never call `fetch` directly.
 - Endpoint functions return `Promise<ApiResult<T>>` and **never throw**. Always check `result.ok` before reading `result.data`; on failure read `result.error` (an `ApiError`). This mirrors the C-TRD rule that an `*ErrorHandler` is never nil.
-- `ApiError` fields: `kind` (`validation | api | network | timeout | aborted | parse`), `message`, `tracking`, `httpStatus`, `fieldErrors` (field -> message, from C-TRD `data.<field>.details`), `details`.
+- `ApiError` fields: `kind` (`validation | api | rateLimit | network | timeout | aborted | parse`), `message`, `tracking`, `httpStatus`, `fieldErrors` (field -> message, from C-TRD `data.<field>.details`), `details`, `retryAfterSeconds` (only `rateLimit`).
 - Errors produced by the frontend itself use tracking codes with the C-TRD format, prefixed with `F` (`FAPICLE001`...). Each code is unique; add new ones to `FrontendTracking` in `errors.ts`.
 - Show errors with `components/ErrorBanner.tsx` so message, field details and tracking code look the same everywhere. `aborted` errors are ignored by `useApiQuery`.
 - For reads use `useApiQuery(fetcher, deps, { pollIntervalMs })`; it keeps the last good `data` while refreshing or after a failed refresh.
@@ -82,7 +89,8 @@ Same branches and promotion flow as C-TRD: `develop` → `qa` → `sandbox` (pre
 - AI agents (C-TRD `agents/`, Friday runner as the `claude` user with privilege `AGENT`, `USER_PRIVILEGE.agent`): the super user queues theses (`POST /operation/create/agent_thesis`, `GET /list/agent_theses`, `PUT /operation/delete/agent_thesis` only for `THESIS-PENDING`), reads runs (`GET /list/agent_runs`, `tagStatus`, `idThesis`) and reviews (`PUT /operation/review/trigger|condition` with `decision` `APPROVE | REJECT`). Endpoints in `api/agents.ts`, models and catalogs in `models/agent.ts`. Conditions and triggers created by the agent are born `STATUS-PENDING-FOR-APPROVE`; rejected ones stay `STATUS-NOT-APPROVED` (not deleted). Approving a trigger also approves its pending conditions; a condition used by a trigger can only be rejected after the trigger (DVOPR039). `/list/triggers` accepts those two `tagStatus` without `showReferences`; `/list/conditions` has optional session and filters by `tagStatus` (super user only, 403 DVLIS006) or `idStatus`; without session or privilege it only lists active/inactive conditions (other status is 403 DVLIS008), while the super user and the agent see every status. `start_run`/`finish_run` belong to the agent user and are not used here.
 - Create/update trigger accept an optional `code` (Pine, max 64 KB) stored as `pineCode`; C-TRD replaces `{{ID_WEBHOOK}}` with the webhook id. On update, omitting it keeps the previous code. Updating a pending trigger makes the new version active.
 - `/operation/google_trends/series` is local-only (C-TRD `LocalOnlyMiddleware`); the browser cannot use it.
-- The `/ws` WebSocket exists but nothing broadcasts on it yet, so the dashboard polls.
+- `/ws` sends `{ "typeEvent": "OPPORTUNITIES-UPDATED", "data": null }` when opportunities are created or change status (hook and cronjobs), batched by C-TRD in 5 s windows. Events carry no data: the dashboard refetches the list and the status counts with its own session. It has no refresh button; it only polls (`VITE_POLL_INTERVAL_MS`) while the socket is down.
+- Rate limit (C-TRD `common/rate_limit.go`): token bucket per IP shared by all the routes of a limiter: 120/min general, 5/min `/auth/login`, 60/min the hook. A rejected request is 429 with tracking `CMMRLE001` and `data.retryAfterSeconds`, mapped to `ApiError` kind `rateLimit`. Every dashboard refresh is 6 requests (list + 5 status counts), so don't add more automatic refetches without accounting for it.
 
 ## Conventions
 
@@ -99,3 +107,10 @@ Same branches and promotion flow as C-TRD: `develop` → `qa` → `sandbox` (pre
 - Don't edit `.env*` files other than `.env.example`.
 - Changes needed in C-TRD (new endpoints, CORS, query params) follow C-TRD's own `CLAUDE.md` and are done in that repository.
 - Make small, focused changes; don't refactor unrelated code.
+
+## biquote API notes
+
+- Public, no key, CORS open to any origin, 15,000 req/min per IP; the browser calls it directly with `externalGet` (it does not go through C-TRD nor spend its rate limit). Docs: https://biquote.io/docs. C-TRD also uses `/api/calendar` in its economic calendar callbacks (`providers/biquote.go`).
+- `GET /api/calendar?importance=high` returns a bare array, oldest first, from yesterday to +7 days. `actual`/`forecast`/`previous` are `null` when there is no value (not zero) and come already scaled by `multiplier` (`4.04` + `millions` = 4.04M); `timeMode` other than `exact` means the time is a placeholder. Some releases come repeated with different ids: the panel dedupes by country + name + time.
+- `GET /api/market/gainers|losers?limit=` answer `{ period, exchange, type, data: [{ symbol, name, exchange, type, lastPrice, changePercent, volume, high, low }], marketState, asOf }`. The docs say `items`/`description`; the real response uses `data`/`name`, so model the real one.
+- Errors are `{ error }` (400) and 429 with `Retry-After`; they map to `ApiError` with trackings `FAPICLE006` / `FAPICLE007`.
