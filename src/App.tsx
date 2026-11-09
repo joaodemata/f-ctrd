@@ -8,6 +8,7 @@ import { ConditionPage } from './components/ConditionPage';
 import { Dashboard } from './components/Dashboard';
 import { GoogleTrendsPage } from './components/GoogleTrendsPage';
 import { HelpPage } from './components/HelpPage';
+import { LanguageSwitch } from './components/LanguageSwitch';
 import { LoginPage } from './components/LoginPage';
 import { MarketBackdrop } from './components/MarketBackdrop';
 import { NavBar, type NavItem } from './components/NavBar';
@@ -31,72 +32,75 @@ interface Route extends NavItem {
 }
 
 const ROUTES: readonly Route[] = [
-  { path: '/', label: 'Oportunidades', component: Dashboard },
+  { path: '/', label: { es: 'Oportunidades', en: 'Opportunities' }, component: Dashboard },
   {
     path: '/triggers',
-    label: 'Triggers',
-    description: 'Triggers activos: detalle, versiones y edicion',
+    label: { es: 'Triggers', en: 'Triggers' },
+    description: { es: 'Triggers activos: detalle, versiones y edicion', en: 'Active triggers: details, versions and editing' },
     group: 'admin',
     component: TriggersPage,
     superUser: true,
   },
   {
     path: '/triggers/nuevo',
-    label: 'Nuevo trigger',
-    description: 'Crear la senal que abre oportunidades',
+    label: { es: 'Nuevo trigger', en: 'New trigger' },
+    description: { es: 'Crear la senal que abre oportunidades', en: 'Create the signal that opens opportunities' },
     group: 'admin',
     component: TriggerPage,
     superUser: true,
   },
   {
     path: '/triggers/versiones',
-    label: 'Versiones',
+    label: { es: 'Versiones', en: 'Versions' },
     component: TriggerVersionsPage,
     navPath: '/triggers',
     superUser: true,
   },
   {
     path: '/condiciones',
-    label: 'Condiciones',
-    description: 'Crear condiciones y ver su ultima evaluacion',
+    label: { es: 'Condiciones', en: 'Conditions' },
+    description: { es: 'Crear condiciones y ver su ultima evaluacion', en: 'Create conditions and see their last evaluation' },
     group: 'admin',
     component: ConditionPage,
     superUser: true,
   },
   {
     path: '/google-trends',
-    label: 'Google Trends',
-    description: 'Subir el CSV de Google Trends de un asset',
+    label: { es: 'Google Trends', en: 'Google Trends' },
+    description: { es: 'Subir el CSV de Google Trends de un asset', en: 'Upload the Google Trends CSV of an asset' },
     group: 'admin',
     component: GoogleTrendsPage,
     superUser: true,
   },
   {
     path: '/agentes/tesis',
-    label: 'Tesis de agentes',
-    description: 'Cola de ideas que los agentes procesan los viernes',
+    label: { es: 'Tesis de agentes', en: 'Agent theses' },
+    description: { es: 'Cola de ideas que los agentes procesan los viernes', en: 'Queue of ideas the agents process on Fridays' },
     group: 'admin',
     component: AgentThesesPage,
     superUser: true,
   },
   {
     path: '/agentes/corridas',
-    label: 'Corridas de agentes',
-    description: 'Pasos, problemas y resultado de cada corrida',
+    label: { es: 'Corridas de agentes', en: 'Agent runs' },
+    description: { es: 'Pasos, problemas y resultado de cada corrida', en: 'Steps, problems and result of each run' },
     group: 'admin',
     component: AgentRunsPage,
     superUser: true,
   },
   {
     path: '/agentes/revision',
-    label: 'Revision de agentes',
-    description: 'Aprobar o rechazar condiciones y triggers de los agentes',
+    label: { es: 'Revision de agentes', en: 'Agent review' },
+    description: {
+      es: 'Aprobar o rechazar condiciones y triggers de los agentes',
+      en: 'Approve or reject the conditions and triggers of the agents',
+    },
     group: 'admin',
     component: AgentReviewPage,
     superUser: true,
   },
-  { path: '/ayuda', label: 'Ayuda', component: HelpPage },
-  { path: '/login', label: 'Iniciar sesion', component: LoginPage, hidden: true },
+  { path: '/ayuda', label: { es: 'Ayuda', en: 'Help' }, component: HelpPage },
+  { path: '/login', label: { es: 'Iniciar sesion', en: 'Log in' }, component: LoginPage, hidden: true },
 ];
 
 export function App() {
@@ -122,6 +126,7 @@ export function App() {
         </a>
         <NavBar items={navItems} currentPath={route.navPath ?? route.path} />
         <span className="muted small topbar__api">API {apiBaseUrl}</span>
+        <LanguageSwitch />
         <SessionMenu />
       </header>
       <Page key={`${route.path}:${allowed}`} />

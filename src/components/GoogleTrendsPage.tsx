@@ -6,6 +6,7 @@ import { formatDate, formatDuration } from '../utils/format';
 import { AssetPicker } from './AssetPicker';
 import { ErrorBanner } from './ErrorBanner';
 import { FormField } from './FormField';
+import { t } from '../i18n/language';
 
 interface UploadInput {
   idAsset: string;
@@ -19,17 +20,19 @@ interface FieldErrors {
 
 // Mismas reglas que GoogleTrendsUploadFormatValidate en C-TRD (extension y tamano)
 function validateFile(file: File | null): string | undefined {
-  if (!file) return 'Elige el CSV exportado de Google Trends.';
-  if (!file.name.toLowerCase().endsWith(GOOGLE_TRENDS_EXTENSION)) return 'El archivo debe ser .csv.';
-  if (file.size === 0) return 'El archivo esta vacio.';
-  if (file.size > GOOGLE_TRENDS_MAX_BYTES) return `El archivo supera ${GOOGLE_TRENDS_MAX_BYTES >> 10} KB.`;
+  if (!file) return t('Elige el CSV exportado de Google Trends.', 'Choose the CSV exported from Google Trends.');
+  if (!file.name.toLowerCase().endsWith(GOOGLE_TRENDS_EXTENSION)) return t('El archivo debe ser .csv.', 'The file must be .csv.');
+  if (file.size === 0) return t('El archivo esta vacio.', 'The file is empty.');
+  if (file.size > GOOGLE_TRENDS_MAX_BYTES) {
+    return t(`El archivo supera ${GOOGLE_TRENDS_MAX_BYTES >> 10} KB.`, `The file exceeds ${GOOGLE_TRENDS_MAX_BYTES >> 10} KB.`);
+  }
   return undefined;
 }
 
 function formatPeriod(seconds: number): string {
-  if (seconds === 86_400) return 'diario';
-  if (seconds === 604_800) return 'semanal';
-  return `cada ${formatDuration(Math.round(seconds / 60))}`;
+  if (seconds === 86_400) return t('diario', 'daily');
+  if (seconds === 604_800) return t('semanal', 'weekly');
+  return t(`cada ${formatDuration(Math.round(seconds / 60))}`, `every ${formatDuration(Math.round(seconds / 60))}`);
 }
 
 export function GoogleTrendsPage() {
@@ -49,7 +52,7 @@ export function GoogleTrendsPage() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const errors: FieldErrors = {};
-    if (!asset) errors.idAsset = 'Elige un asset.';
+    if (!asset) errors.idAsset = t('Elige un asset.', 'Choose an asset.');
     const fileError = validateFile(file);
     if (fileError) errors.file = fileError;
     setClientErrors(errors);
@@ -71,25 +74,32 @@ export function GoogleTrendsPage() {
         <div>
           <h1>Google Trends</h1>
           <p className="muted small">
-            Sube el CSV exportado de Google Trends de un asset. Las condiciones de la API <em>Google Trends Series</em> leen
-            ese archivo; cada subida reemplaza la anterior del mismo asset.
+            {t('Sube el CSV exportado de Google Trends de un asset. Las condiciones de la API ', 'Upload the CSV exported from Google Trends for an asset. Conditions using the ')}
+            <em>Google Trends Series</em>
+            {t(
+              ' leen ese archivo; cada subida reemplaza la anterior del mismo asset.',
+              ' API read that file; each upload replaces the previous one for the same asset.',
+            )}
           </p>
         </div>
       </div>
 
       {uploaded && (
         <section className="panel panel--padded success" role="status">
-          <h2>CSV guardado{uploadedAsset ? ` para ${uploadedAsset.tag}` : ''}</h2>
+          <h2>
+            {t('CSV guardado', 'CSV saved')}
+            {uploadedAsset ? t(` para ${uploadedAsset.tag}`, ` for ${uploadedAsset.tag}`) : ''}
+          </h2>
           <dl className="kv kv--wide">
-            <dt>Termino</dt>
+            <dt>{t('Termino', 'Term')}</dt>
             <dd>{uploaded.keyword || '—'}</dd>
-            <dt>Periodos completos</dt>
+            <dt>{t('Periodos completos', 'Complete periods')}</dt>
             <dd>{uploaded.points}</dd>
-            <dt>Frecuencia</dt>
+            <dt>{t('Frecuencia', 'Frequency')}</dt>
             <dd>{formatPeriod(uploaded.periodSeconds)}</dd>
-            <dt>Ultimo periodo</dt>
+            <dt>{t('Ultimo periodo', 'Last period')}</dt>
             <dd>
-              {formatDate(uploaded.lastDate)} · valor <strong>{uploaded.lastValue}</strong>
+              {formatDate(uploaded.lastDate)} · {t('valor', 'value')} <strong>{uploaded.lastValue}</strong>
             </dd>
           </dl>
         </section>
@@ -101,10 +111,13 @@ export function GoogleTrendsPage() {
         </FormField>
 
         <FormField
-          label="Archivo CSV"
+          label={t('Archivo CSV', 'CSV file')}
           required
           error={fieldError('file')}
-          hint={`En Google Trends: Explorar → Interes a lo largo del tiempo → Descargar. Maximo ${GOOGLE_TRENDS_MAX_BYTES >> 10} KB.`}
+          hint={t(
+            `En Google Trends: Explorar → Interes a lo largo del tiempo → Descargar. Maximo ${GOOGLE_TRENDS_MAX_BYTES >> 10} KB.`,
+            `In Google Trends: Explore → Interest over time → Download. Maximum ${GOOGLE_TRENDS_MAX_BYTES >> 10} KB.`,
+          )}
         >
           <input
             ref={fileInputRef}
@@ -120,7 +133,7 @@ export function GoogleTrendsPage() {
 
         <div className="form-actions">
           <button type="submit" className="button button--primary" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Subiendo…' : 'Subir CSV'}
+            {mutation.isPending ? t('Subiendo…', 'Uploading…') : t('Subir CSV', 'Upload CSV')}
           </button>
         </div>
       </form>

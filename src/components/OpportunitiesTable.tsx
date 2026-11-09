@@ -3,6 +3,7 @@ import { ConditionStatusTag, type Opportunity } from '../models/opportunity';
 import { formatDateTime, formatPrice, formatTimeLeft } from '../utils/format';
 import { OpportunityDetail } from './OpportunityDetail';
 import { StatusBadge } from './StatusBadge';
+import { t } from '../i18n/language';
 
 interface OpportunitiesTableProps {
   opportunities: Opportunity[];
@@ -24,8 +25,8 @@ export function OpportunitiesTable({ opportunities }: OpportunitiesTableProps) {
   if (opportunities.length === 0) {
     return (
       <div className="empty">
-        <p>No hay oportunidades con estos filtros.</p>
-        <p className="tagline">Las buenas oportunidades toman tiempo en crecer.</p>
+        <p>{t('No hay oportunidades con estos filtros.', 'No opportunities match these filters.')}</p>
+        <p className="tagline">{t('Las buenas oportunidades toman tiempo en crecer.', 'Good opportunities take time to grow.')}</p>
       </div>
     );
   }
@@ -35,14 +36,16 @@ export function OpportunitiesTable({ opportunities }: OpportunitiesTableProps) {
       <table className="table table--cards">
         <thead>
           <tr>
-            <th scope="col" aria-label="Expandir" />
-            <th scope="col">Activo</th>
-            <th scope="col">Accion</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Condiciones</th>
-            <th scope="col" className="num">Precio disparo</th>
-            <th scope="col">Creada</th>
-            <th scope="col">Expira</th>
+            <th scope="col" aria-label={t('Expandir', 'Expand')} />
+            <th scope="col">{t('Activo', 'Asset')}</th>
+            <th scope="col">{t('Accion', 'Action')}</th>
+            <th scope="col">{t('Estado', 'Status')}</th>
+            <th scope="col">{t('Condiciones', 'Conditions')}</th>
+            <th scope="col" className="num">
+              {t('Precio disparo', 'Trigger price')}
+            </th>
+            <th scope="col">{t('Creada', 'Created')}</th>
+            <th scope="col">{t('Expira', 'Expires')}</th>
           </tr>
         </thead>
         <tbody>
@@ -56,7 +59,7 @@ export function OpportunitiesTable({ opportunities }: OpportunitiesTableProps) {
                       type="button"
                       className="icon-button"
                       aria-expanded={expanded}
-                      aria-label={expanded ? 'Ocultar detalle' : 'Ver detalle'}
+                      aria-label={expanded ? t('Ocultar detalle', 'Hide details') : t('Ver detalle', 'Show details')}
                       onClick={() => setExpandedId(expanded ? null : opportunity.id)}
                     >
                       {expanded ? '▾' : '▸'}
@@ -66,14 +69,14 @@ export function OpportunitiesTable({ opportunities }: OpportunitiesTableProps) {
                     <strong>{opportunity.asset || opportunity.tagAsset}</strong>
                     <div className="muted small">{opportunity.tagTrigger}</div>
                   </td>
-                  <td data-label="Accion">{opportunity.action || opportunity.tagAction}</td>
-                  <td data-label="Estado">
+                  <td data-label={t('Accion', 'Action')}>{opportunity.action || opportunity.tagAction}</td>
+                  <td data-label={t('Estado', 'Status')}>
                     <StatusBadge tag={opportunity.tagStatus} label={opportunity.status || opportunity.tagStatus} />
                   </td>
-                  <td data-label="Condiciones">{conditionsMet(opportunity)}</td>
-                  <td className="num" data-label="Precio disparo">{formatPrice(opportunity.priceTriggered)}</td>
-                  <td data-label="Creada">{formatDateTime(opportunity.createdDate)}</td>
-                  <td data-label="Expira" title={formatDateTime(opportunity.expirationDate)}>{formatTimeLeft(opportunity.expirationDate)}</td>
+                  <td data-label={t('Condiciones', 'Conditions')}>{conditionsMet(opportunity)}</td>
+                  <td className="num" data-label={t('Precio disparo', 'Trigger price')}>{formatPrice(opportunity.priceTriggered)}</td>
+                  <td data-label={t('Creada', 'Created')}>{formatDateTime(opportunity.createdDate)}</td>
+                  <td data-label={t('Expira', 'Expires')} title={formatDateTime(opportunity.expirationDate)}>{formatTimeLeft(opportunity.expirationDate)}</td>
                 </tr>
                 {expanded && (
                   <tr className="table__detail" data-status={opportunity.tagStatus}>

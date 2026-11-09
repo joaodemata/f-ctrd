@@ -400,6 +400,17 @@ p {
   margin-left: auto;
 }
 
+/* Idioma (LanguageSwitch.tsx) */
+
+.segmented.language-switch {
+  flex: none;
+  --tone: var(--text);
+}
+
+.segmented.language-switch button {
+  padding: 3px 8px;
+}
+
 /* Sesion */
 
 .session-menu {
@@ -2188,7 +2199,9 @@ a {
 .sheet {
   width: 100%;
   max-width: 560px;
+  /* dvh: en iOS Safari 80vh mide con la barra del navegador oculta y la hoja queda tapada abajo */
   max-height: 80vh;
+  max-height: 80dvh;
   margin: auto auto 0;
   padding: 0;
   display: none;
@@ -2246,7 +2259,9 @@ a {
 
 .calendar__body.sheet__body {
   max-height: none;
-  flex: 1;
+  /* Base auto (no 0%): con solo max-height en la hoja, Safari no hace crecer un item de base 0% y la lista
+     queda colapsada; con auto toma su alto y se encoge hasta el tope, y el resto se desplaza */
+  flex: 1 1 auto;
   min-height: 0;
   padding-bottom: 16px;
 }
@@ -2392,6 +2407,11 @@ a {
     padding-top: 8px;
     padding-bottom: 8px;
     row-gap: 6px;
+  }
+
+  /* Junto a la sesion, a la derecha de la marca */
+  .language-switch {
+    margin-left: auto;
   }
 
   .navbar {

@@ -3,7 +3,8 @@ import { apiBaseUrl } from '../api/config';
 
 // Guia extendida de la ayuda: TradingView paso a paso, otros origenes de alertas (n8n, scripts), ejemplos completos
 // y enlaces. Lo largo va en <details> para que la pagina se pueda recorrer rapido; al descargar el PDF HelpPage abre
-// todos los <details>, asi el PDF trae la explicacion completa
+// todos los <details>, asi el PDF trae la explicacion completa. La version en ingles es HelpGuideEn.tsx: al cambiar
+// algo aqui, actualizarla tambien
 
 const hookUrl = `${apiBaseUrl}/hook/trigger`;
 
@@ -17,7 +18,7 @@ export function More({ title, children }: { title: string; children: ReactNode }
   );
 }
 
-function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
+export function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <a href={href} target="_blank" rel="noreferrer" className="help-external">
       {children}

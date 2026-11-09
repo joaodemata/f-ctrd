@@ -1,3 +1,4 @@
+import { t, type Localized } from '../i18n/language';
 import type { ApiResponse, FormatErrorData } from './types';
 
 // Tipos de error que puede producir una llamada a la API
@@ -24,14 +25,15 @@ export const FrontendTracking = {
   externalRateLimit: 'FAPICLE007',
 } as const;
 
-const defaultMessages: Record<ApiErrorKind, string> = {
-  validation: 'Los datos enviados no tienen el formato esperado.',
-  api: 'El servidor no pudo completar la operacion.',
-  rateLimit: 'Demasiadas peticiones, intenta mas tarde.',
-  network: 'No se pudo conectar con el servidor C-TRD.',
-  timeout: 'El servidor tardo demasiado en responder.',
-  aborted: 'La peticion fue cancelada.',
-  parse: 'El servidor envio una respuesta inesperada.',
+// Mensajes propios del frontend; los de C-TRD llegan en espanol y se muestran tal cual
+const defaultMessages: Record<ApiErrorKind, Localized> = {
+  validation: { es: 'Los datos enviados no tienen el formato esperado.', en: 'The data sent does not have the expected format.' },
+  api: { es: 'El servidor no pudo completar la operacion.', en: 'The server could not complete the operation.' },
+  rateLimit: { es: 'Demasiadas peticiones, intenta mas tarde.', en: 'Too many requests, try again later.' },
+  network: { es: 'No se pudo conectar con el servidor C-TRD.', en: 'Could not connect to the C-TRD server.' },
+  timeout: { es: 'El servidor tardo demasiado en responder.', en: 'The server took too long to respond.' },
+  aborted: { es: 'La peticion fue cancelada.', en: 'The request was canceled.' },
+  parse: { es: 'El servidor envio una respuesta inesperada.', en: 'The server sent an unexpected response.' },
 };
 
 export interface ApiErrorInit {
@@ -60,7 +62,7 @@ export class ApiError extends Error {
   readonly cause?: unknown;
 
   constructor(init: ApiErrorInit) {
-    super(init.message || defaultMessages[init.kind]);
+    super(init.message || t(defaultMessages[init.kind]));
     this.name = 'ApiError';
     this.kind = init.kind;
     this.tracking = init.tracking;
@@ -156,7 +158,7 @@ export function apiErrorFromException(cause: unknown, timedOut: boolean): ApiErr
   }
   return new ApiError({
     kind: 'network',
-    message: 'Error inesperado al llamar al servidor.',
+    message: t('Error inesperado al llamar al servidor.', 'Unexpected error calling the server.'),
     tracking: FrontendTracking.unknown,
     cause,
   });

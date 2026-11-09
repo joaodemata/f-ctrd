@@ -3,6 +3,7 @@ import { createTrigger } from '../api/triggers';
 import { useApiMutation } from '../hooks/useApiMutation';
 import { TradingViewHookInfo } from './TradingViewHookInfo';
 import { EMPTY_TRIGGER_FORM, TriggerForm } from './TriggerForm';
+import { t } from '../i18n/language';
 
 export function TriggerPage() {
   // Cambia al limpiar: remonta el formulario con los valores vacios
@@ -13,23 +14,27 @@ export function TriggerPage() {
     return (
       <main className="page page--narrow">
         <div className="page__head">
-          <h1>Trigger creado</h1>
+          <h1>{t('Trigger creado', 'Trigger created')}</h1>
         </div>
         <section className="panel panel--padded success">
           <p>
-            El trigger queda <strong>activo</strong>. Cada vez que TradingView llame al webhook se crea una oportunidad
-            (si no hay otra en curso o activa del mismo trigger).
+            {t('El trigger queda ', 'The trigger is now ')}
+            <strong>{t('activo', 'active')}</strong>
+            {t(
+              '. Cada vez que TradingView llame al webhook se crea una oportunidad (si no hay otra en curso o activa del mismo trigger).',
+              '. Every time TradingView calls the webhook an opportunity is created (unless there is already an ongoing or active one for the same trigger).',
+            )}
           </p>
           <TradingViewHookInfo idWebhook={mutation.data.idWebhook} />
           <div className="form-actions">
             <button type="button" className="button button--primary" onClick={mutation.reset}>
-              Crear otro trigger
+              {t('Crear otro trigger', 'Create another trigger')}
             </button>
             <a className="button" href="#/triggers">
-              Ver triggers
+              {t('Ver triggers', 'See triggers')}
             </a>
             <a className="button" href="#/">
-              Ver oportunidades
+              {t('Ver oportunidades', 'See opportunities')}
             </a>
           </div>
         </section>
@@ -41,9 +46,12 @@ export function TriggerPage() {
     <main className="page page--narrow">
       <div className="page__head">
         <div>
-          <h1>Nuevo trigger</h1>
+          <h1>{t('Nuevo trigger', 'New trigger')}</h1>
           <p className="muted small">
-            Un trigger es la senal (por ejemplo una alerta de TradingView) que abre oportunidades sobre un asset.
+            {t(
+              'Un trigger es la senal (por ejemplo una alerta de TradingView) que abre oportunidades sobre un asset.',
+              'A trigger is the signal (for example a TradingView alert) that opens opportunities on an asset.',
+            )}
           </p>
         </div>
       </div>
@@ -57,9 +65,9 @@ export function TriggerPage() {
         }}
         isPending={mutation.isPending}
         error={mutation.error}
-        submitLabel="Crear trigger"
-        pendingLabel="Creando…"
-        cancelLabel="Limpiar"
+        submitLabel={t('Crear trigger', 'Create trigger')}
+        pendingLabel={t('Creando…', 'Creating…')}
+        cancelLabel={t('Limpiar', 'Clear')}
         onCancel={() => {
           setFormKey((key) => key + 1);
           mutation.reset();

@@ -7,6 +7,7 @@ import { Filters, type FilterValues } from './Filters';
 import { Pagination } from './Pagination';
 import { TriggerEdit } from './TriggerEdit';
 import { TriggersTable } from './TriggersTable';
+import { t } from '../i18n/language';
 
 const DEFAULT_LIMIT = 10;
 const EMPTY_FILTERS: FilterValues = { search: '', startDate: '', endDate: '' };
@@ -39,7 +40,7 @@ export function TriggersPage() {
       <main className="page page--narrow">
         <div className="page__head">
           <div>
-            <h1>Editar trigger</h1>
+            <h1>{t('Editar trigger', 'Edit trigger')}</h1>
             <p className="muted small">
               {editing.name} · <code>{editing.tag}</code>
             </p>
@@ -61,25 +62,30 @@ export function TriggersPage() {
       <div className="page__head">
         <div>
           <h1>Triggers</h1>
-          <p className="muted small">Triggers activos. Despliega uno para ver su detalle, sus versiones o editarlo.</p>
+          <p className="muted small">
+            {t(
+              'Triggers activos. Despliega uno para ver su detalle, sus versiones o editarlo.',
+              'Active triggers. Expand one to see its details and versions, or to edit it.',
+            )}
+          </p>
         </div>
         <div className="form-actions">
           <button type="button" className="button" onClick={list.refetch} disabled={list.isLoading || list.isRefreshing}>
-            {list.isRefreshing ? 'Actualizando…' : 'Actualizar'}
+            {list.isRefreshing ? t('Actualizando…', 'Refreshing…') : t('Actualizar', 'Refresh')}
           </button>
           <a className="button button--primary" href="#/triggers/nuevo">
-            Nuevo trigger
+            {t('Nuevo trigger', 'New trigger')}
           </a>
         </div>
       </div>
 
-      <Filters value={filters} onChange={handleFilters} placeholder="Nombre, tag, descripcion, asset, accion o estado" />
+      <Filters value={filters} onChange={handleFilters} placeholder={t('Nombre, tag, descripcion, asset, accion o estado', 'Name, tag, description, asset, action or status')} />
 
       {list.error && <ErrorBanner error={list.error} onRetry={list.refetch} stale={!!list.data} />}
 
       <section className="panel" aria-busy={list.isLoading || list.isRefreshing}>
         {list.isLoading ? (
-          <p className="empty">Cargando triggers…</p>
+          <p className="empty">{t('Cargando triggers…', 'Loading triggers…')}</p>
         ) : (
           list.data && (
             <>
