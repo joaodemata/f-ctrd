@@ -1,3 +1,4 @@
+import { t } from '../i18n/language';
 interface PaginationProps {
   page: number;
   limit: number;
@@ -14,12 +15,12 @@ export function Pagination({ page, limit, total, onPageChange, onLimitChange }: 
   const to = Math.min(page * limit, total);
 
   return (
-    <nav className="pagination" aria-label="Paginacion">
+    <nav className="pagination" aria-label={t('Paginacion', 'Pagination')}>
       <span className="muted">
-        {from}–{to} de {total}
+        {from}–{to} {t('de', 'of')} {total}
       </span>
       <label className="pagination__limit">
-        <span className="muted">Por pagina</span>
+        <span className="muted">{t('Por pagina', 'Per page')}</span>
         <select value={limit} onChange={(event) => onLimitChange(Number(event.target.value))}>
           {LIMIT_OPTIONS.map((option) => (
             <option key={option} value={option}>
@@ -30,7 +31,7 @@ export function Pagination({ page, limit, total, onPageChange, onLimitChange }: 
       </label>
       <div className="pagination__buttons">
         <button type="button" className="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
-          Anterior
+          {t('Anterior', 'Previous')}
         </button>
         <span>
           {page} / {totalPages}
@@ -41,7 +42,7 @@ export function Pagination({ page, limit, total, onPageChange, onLimitChange }: 
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
         >
-          Siguiente
+          {t('Siguiente', 'Next')}
         </button>
       </div>
     </nav>

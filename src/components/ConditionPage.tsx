@@ -28,6 +28,7 @@ import {
   type VisibilityFieldErrors,
   type VisibilityFormValues,
 } from './VisibilityFields';
+import { t } from '../i18n/language';
 
 // C-TRD limita el listado de APIs a 100 por pagina; hoy hay pocas y caben en un select
 const API_LIMIT = 100;
@@ -36,7 +37,7 @@ const INTERVAL_PRESETS = [
   { seconds: 60, label: '1 min' },
   { seconds: 900, label: '15 min' },
   { seconds: 3600, label: '1 h' },
-  { seconds: 86400, label: '1 dia' },
+  { seconds: 86400, label: t('1 dia', '1 day') },
 ];
 
 interface ConditionFormValues {
@@ -107,8 +108,8 @@ function ParameterFields({ parameters, values, errors, onChange }: ParameterFiel
           hint={
             <>
               {parameter.description}
-              {parameterRangeText(parameter) && ` Valor ${parameterRangeText(parameter)}.`}
-              {parameter.defaultValue !== null && ` Por defecto: ${parameter.defaultValue}.`}
+              {parameterRangeText(parameter) && t(` Valor ${parameterRangeText(parameter)}.`, ` Value ${parameterRangeText(parameter)}.`)}
+              {parameter.defaultValue !== null && t(` Por defecto: ${parameter.defaultValue}.`, ` Default: ${parameter.defaultValue}.`)}
             </>
           }
         >
@@ -178,15 +179,18 @@ export function ConditionPage() {
     const { api, callback, typeCondition } = values;
 
     const errors: FieldErrors = {};
-    if (!values.tag.trim()) errors.tag = 'El tag es obligatorio.';
-    if (!values.name.trim()) errors.name = 'El nombre es obligatorio.';
-    if (!values.description.trim()) errors.description = 'La descripcion es obligatoria.';
-    if (!typeCondition) errors.idTypeCondition = 'Elige un tipo de condicion.';
-    if (!api) errors.idApi = 'Elige una API.';
-    if (!callback) errors.callbackFunction = 'Elige un callback.';
+    if (!values.tag.trim()) errors.tag = t('El tag es obligatorio.', 'The tag is required.');
+    if (!values.name.trim()) errors.name = t('El nombre es obligatorio.', 'The name is required.');
+    if (!values.description.trim()) errors.description = t('La descripcion es obligatoria.', 'The description is required.');
+    if (!typeCondition) errors.idTypeCondition = t('Elige un tipo de condicion.', 'Choose a condition type.');
+    if (!api) errors.idApi = t('Elige una API.', 'Choose an API.');
+    if (!callback) errors.callbackFunction = t('Elige un callback.', 'Choose a callback.');
     const interval = Number(values.intervalSeconds);
     if (!Number.isInteger(interval) || interval < CONDITION_MIN_INTERVAL_SECONDS) {
-      errors.intervalSeconds = `Debe ser un entero de al menos ${CONDITION_MIN_INTERVAL_SECONDS} segundos.`;
+      errors.intervalSeconds = t(
+        `Debe ser un entero de al menos ${CONDITION_MIN_INTERVAL_SECONDS} segundos.`,
+        `Must be a whole number of at least ${CONDITION_MIN_INTERVAL_SECONDS} seconds.`,
+      );
     }
 
     const nextParameterErrors = validateParameters(api?.parameters ?? [], values.parameters);
@@ -227,17 +231,25 @@ export function ConditionPage() {
   const interval = Number(values.intervalSeconds);
   const intervalHint =
     Number.isInteger(interval) && interval >= CONDITION_MIN_INTERVAL_SECONDS
-      ? `Se evalua cada ${formatDuration(Math.round(interval / 60))}. El cronjob corre cada minuto.`
-      : `Minimo ${CONDITION_MIN_INTERVAL_SECONDS} segundos: el cronjob corre cada minuto.`;
+      ? t(
+          `Se evalua cada ${formatDuration(Math.round(interval / 60))}. El cronjob corre cada minuto.`,
+          `Evaluated every ${formatDuration(Math.round(interval / 60))}. The cronjob runs every minute.`,
+        )
+      : t(
+          `Minimo ${CONDITION_MIN_INTERVAL_SECONDS} segundos: el cronjob corre cada minuto.`,
+          `At least ${CONDITION_MIN_INTERVAL_SECONDS} seconds: the cronjob runs every minute.`,
+        );
 
   return (
     <main className="page">
       <div className="page__head">
         <div>
-          <h1>Nueva condicion</h1>
+          <h1>{t('Nueva condicion', 'New condition')}</h1>
           <p className="muted small">
-            Una condicion consulta una API de forma periodica y un callback decide si se cumple. Se asignan a los
-            triggers.
+            {t(
+              'Una condicion consulta una API de forma periodica y un callback decide si se cumple. Se asignan a los triggers.',
+              'A condition queries an API periodically and a callback decides whether it is met. Conditions are assigned to triggers.',
+            )}
           </p>
         </div>
       </div>
@@ -245,21 +257,28 @@ export function ConditionPage() {
       {mutation.data && (
         <div className="success-banner" role="status">
           <div>
-            <strong>Condicion creada.</strong> Queda <em>Inactiva</em> hasta que el cronjob la evalue y se cumpla.
+            <strong>{t('Condicion creada.', 'Condition created.')}</strong> {t('Queda ', 'It stays ')}
+            <em>{t('Inactiva', 'Inactive')}</em>
+            {t(' hasta que el cronjob la evalue y se cumpla.', ' until the cronjob evaluates it and it is met.')}
             <div className="copy-row">
               <code>{mutation.data.idCondition}</code>
               <CopyButton text={mutation.data.idCondition} />
             </div>
           </div>
           <a className="button" href="#/triggers/nuevo">
-            Usarla en un trigger
+            {t('Usarla en un trigger', 'Use it in a trigger')}
           </a>
         </div>
       )}
 
       <form className="panel panel--padded form" onSubmit={handleSubmit} noValidate>
         <div className="form-grid">
-          <FormField label="Tag" required error={fieldError('tag')} hint="Identificador unico de la condicion.">
+          <FormField
+            label="Tag"
+            required
+            error={fieldError('tag')}
+            hint={t('Identificador unico de la condicion.', 'Unique identifier of the condition.')}
+          >
             <input
               value={values.tag}
               onChange={(event) => set('tag', event.target.value)}
@@ -268,17 +287,17 @@ export function ConditionPage() {
               aria-invalid={!!fieldError('tag')}
             />
           </FormField>
-          <FormField label="Nombre" required error={fieldError('name')}>
+          <FormField label={t('Nombre', 'Name')} required error={fieldError('name')}>
             <input
               value={values.name}
               onChange={(event) => set('name', event.target.value)}
-              placeholder="FED: bajada de tasa probable"
+              placeholder={t('FED: bajada de tasa probable', 'FED: rate cut likely')}
               maxLength={200}
               aria-invalid={!!fieldError('name')}
             />
           </FormField>
           <FormField
-            label="Tipo"
+            label={t('Tipo', 'Type')}
             required
             error={fieldError('idTypeCondition')}
             hint={values.typeCondition?.description}
@@ -287,13 +306,13 @@ export function ConditionPage() {
               type={CatalogType.Condition}
               value={values.typeCondition}
               onChange={(catalog) => set('typeCondition', catalog)}
-              placeholder="Elige un tipo"
+              placeholder={t('Elige un tipo', 'Choose a type')}
               invalid={!!fieldError('idTypeCondition')}
             />
           </FormField>
         </div>
 
-        <FormField label="Descripcion" required error={fieldError('description')}>
+        <FormField label={t('Descripcion', 'Description')} required error={fieldError('description')}>
           <textarea
             value={values.description}
             onChange={(event) => set('description', event.target.value)}
@@ -311,7 +330,11 @@ export function ConditionPage() {
             aria-invalid={!!fieldError('idApi')}
           >
             <option value="" disabled>
-              {apis.isLoading ? 'Cargando…' : apiOptions.length === 0 ? 'No hay APIs activas' : 'Elige una API'}
+              {apis.isLoading
+                ? t('Cargando…', 'Loading…')
+                : apiOptions.length === 0
+                  ? t('No hay APIs activas', 'There are no active APIs')
+                  : t('Elige una API', 'Choose an API')}
             </option>
             {apiOptions.map((api) => (
               <option key={api.id} value={api.id}>
@@ -326,9 +349,9 @@ export function ConditionPage() {
         {values.api && (
           <>
             <fieldset className="form-section" key={`${values.api.id}-${formKey}`}>
-              <legend>Parametros</legend>
+              <legend>{t('Parametros', 'Parameters')}</legend>
               {values.api.parameters.length === 0 ? (
-                <p className="muted small">Esta API no tiene parametros.</p>
+                <p className="muted small">{t('Esta API no tiene parametros.', 'This API has no parameters.')}</p>
               ) : (
                 <ParameterFields
                   parameters={values.api.parameters}
@@ -352,7 +375,7 @@ export function ConditionPage() {
 
             {values.callback && values.callback.parameters.length > 0 && (
               <fieldset className="form-section" key={`${values.callback.id}-${formKey}`}>
-                <legend>Parametros del callback</legend>
+                <legend>{t('Parametros del callback', 'Callback parameters')}</legend>
                 <ParameterFields
                   parameters={values.callback.parameters}
                   values={values.parametersCallback}
@@ -369,7 +392,7 @@ export function ConditionPage() {
           </>
         )}
 
-        <FormField label="Intervalo (segundos)" required error={fieldError('intervalSeconds')} hint={intervalHint}>
+        <FormField label={t('Intervalo (segundos)', 'Interval (seconds)')} required error={fieldError('intervalSeconds')} hint={intervalHint}>
           <input
             type="number"
             inputMode="numeric"
@@ -404,7 +427,7 @@ export function ConditionPage() {
 
         <div className="form-actions">
           <button type="submit" className="button button--primary" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creando…' : 'Crear condicion'}
+            {mutation.isPending ? t('Creando…', 'Creating…') : t('Crear condicion', 'Create condition')}
           </button>
           <button
             type="button"
@@ -415,7 +438,7 @@ export function ConditionPage() {
             }}
             disabled={mutation.isPending}
           >
-            Limpiar
+            {t('Limpiar', 'Clear')}
           </button>
         </div>
       </form>

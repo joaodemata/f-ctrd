@@ -1,4 +1,6 @@
+import { t } from '../i18n/language';
 import type { ObjectId } from './opportunity';
+import { VISIBILITY } from './visibility';
 
 // Espejo de models/catalogs_model.go en C-TRD (GET /list/catalogs solo proyecta estos campos)
 export interface Catalog {
@@ -41,3 +43,16 @@ export const TIMEFRAME_MINUTES: Readonly<Record<string, number>> = {
   // Un mes se aproxima a 30 dias
   '1-MONTH': 43200,
 };
+
+// Nombre para mostrar de un catalogo de C-TRD (los nombres llegan en espanol). En ingles se traducen los tags conocidos:
+// visibilidad y temporalidades ('5-MINUTES' -> '5 minutes'); el resto queda con el nombre de C-TRD
+export function catalogLabel(catalog: Pick<Catalog, 'tag' | 'name'>): string {
+  const visibility = Object.values(VISIBILITY).find((item) => item.tag === catalog.tag);
+  if (visibility) return t(visibility.label);
+  const timeframe = /^(\d+)-(MINUTE|HOUR|DAY|WEEK|MONTH)S?$/.exec(catalog.tag);
+  if (timeframe && catalog.tag in TIMEFRAME_MINUTES) {
+    const [, amount, unit] = timeframe;
+    return t(catalog.name, `${amount} ${unit!.toLowerCase()}${amount === '1' ? '' : 's'}`);
+  }
+  return catalog.name;
+}

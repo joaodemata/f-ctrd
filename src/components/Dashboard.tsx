@@ -16,6 +16,7 @@ import { MarketMoversBanner } from './MarketMoversBanner';
 import { OpportunitiesTable } from './OpportunitiesTable';
 import { Pagination } from './Pagination';
 import { StatusSummary } from './StatusSummary';
+import { t } from '../i18n/language';
 
 const DEFAULT_LIMIT = 10;
 const EMPTY_FILTERS: FilterValues = { search: '', startDate: '', endDate: '' };
@@ -97,19 +98,33 @@ export function Dashboard() {
     <main className="dashboard">
       {/* Titulo con el estado en vivo; las notas van dentro del boton "i" para no ocupar lineas */}
       <div className="dashboard__head dashboard__title">
-        <h1>Oportunidades</h1>
+        <h1>{t('Oportunidades', 'Opportunities')}</h1>
         {live && (
-          <span className="live-badge" title="Se actualiza sola cuando cambian las oportunidades">
-            En vivo
+          <span
+            className="live-badge"
+            title={t('Se actualiza sola cuando cambian las oportunidades', 'Updates itself when opportunities change')}
+          >
+            {t('En vivo', 'Live')}
           </span>
         )}
-        <InfoPopover label="Informacion sobre las oportunidades">
-          <p>{list.lastUpdated ? `Actualizado a las ${list.lastUpdated.toLocaleTimeString('es')}.` : 'Cargando…'}</p>
-          <p>Todos los precios estan expresados en USD.</p>
+        <InfoPopover label={t('Informacion sobre las oportunidades', 'About opportunities')}>
+          <p>
+            {list.lastUpdated
+              ? t(
+                  `Actualizado a las ${list.lastUpdated.toLocaleTimeString('es')}.`,
+                  `Updated at ${list.lastUpdated.toLocaleTimeString('en')}.`,
+                )
+              : t('Cargando…', 'Loading…')}
+          </p>
+          <p>{t('Todos los precios estan expresados en USD.', 'All prices are in USD.')}</p>
           {auth.status === 'anonymous' && (
             <p>
-              Sin sesion solo ves las oportunidades publicas. <a href="#/login">Inicia sesion</a> para ver tambien las
-              tuyas y las compartidas contigo.
+              {t('Sin sesion solo ves las oportunidades publicas. ', 'Without a session you only see public opportunities. ')}
+              <a href="#/login">{t('Inicia sesion', 'Log in')}</a>
+              {t(
+                ' para ver tambien las tuyas y las compartidas contigo.',
+                ' to also see yours and the ones shared with you.',
+              )}
             </p>
           )}
         </InfoPopover>
@@ -125,8 +140,12 @@ export function Dashboard() {
           <Filters value={filters} onChange={handleFilters} />
           {status && (
             <p className="muted small">
-              Filtrando por estado <strong>{status.name}</strong>; el texto de busqueda se ignora mientras el estado este
-              seleccionado.
+              {t('Filtrando por estado ', 'Filtering by status ')}
+              <strong>{t(status.label)}</strong>
+              {t(
+                '; el texto de busqueda se ignora mientras el estado este seleccionado.',
+                '; the search text is ignored while a status is selected.',
+              )}
             </p>
           )}
 
@@ -134,7 +153,7 @@ export function Dashboard() {
 
           <section className="panel" aria-busy={list.isLoading || list.isRefreshing}>
             {list.isLoading ? (
-              <p className="empty">Cargando oportunidades…</p>
+              <p className="empty">{t('Cargando oportunidades…', 'Loading opportunities…')}</p>
             ) : (
               list.data && (
                 <>

@@ -5,6 +5,7 @@ import { useApiQuery } from '../hooks/useApiQuery';
 import { PHONE_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import { MARKET_TYPES, type MarketMover, type MarketType } from '../models/biquote';
 import { ErrorBanner } from './ErrorBanner';
+import { memoByLanguage, t, type Localized } from '../i18n/language';
 
 // Ranking por variacion desde la apertura diaria; se refresca cada minuto
 const MARKET_POLL_MS = 60_000;
@@ -30,15 +31,16 @@ function saveMarketType(type: MarketType | '') {
   }
 }
 
-const TYPE_OPTIONS: readonly { value: MarketType | ''; label: string }[] = [{ value: '', label: 'Todos' }, ...MARKET_TYPES];
+const TYPE_OPTIONS: readonly { value: MarketType | ''; label: Localized }[] = [
+  { value: '', label: { es: 'Todos', en: 'All' } },
+  ...MARKET_TYPES,
+];
 
-const percentFormat = new Intl.NumberFormat('es', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-  signDisplay: 'exceptZero',
-});
-const priceFormat = new Intl.NumberFormat('es', { maximumSignificantDigits: 6 });
-const timeFormat = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit' });
+const formats = memoByLanguage((locale) => ({
+  percent: new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' }),
+  price: new Intl.NumberFormat(locale, { maximumSignificantDigits: 6 }),
+  time: new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }),
+}));
 // Velocidad de la cinta en px por segundo
 const TICKER_SPEED_PX_PER_S = 20;
 // Desplazamiento de cada flecha y rapidez con la que se completa (fraccion del salto pendiente por segundo)
@@ -50,7 +52,7 @@ const TICKER_NUDGE_RATE = 8;
 const NON_USD_TYPES = new Set(['Forex', 'Index']);
 
 function formatMoverPrice(mover: MarketMover): string {
-  const price = priceFormat.format(mover.lastPrice);
+  const price = formats().price.format(mover.lastPrice);
   return NON_USD_TYPES.has(mover.type) ? price : `$${price}`;
 }
 
@@ -61,7 +63,7 @@ function MoverItems({ movers, hidden = false }: { movers: MarketMover[]; hidden?
         <li key={`${mover.exchange}:${mover.symbol}`} className="movers__item" title={`${mover.name} · ${mover.type}`}>
           <span className="movers__symbol">{mover.symbol}</span>
           <span className="movers__price">{formatMoverPrice(mover)}</span>
-          <span className="movers__change">{percentFormat.format(mover.changePercent)}%</span>
+          <span className="movers__change">{formats().percent.format(mover.changePercent)}%</span>
         </li>
       ))}
     </ul>
@@ -125,7 +127,7 @@ function Ticker({ movers, direction }: { movers: MarketMover[]; direction: 1 | -
 
   return (
     <div className="movers__ticker-wrap">
-      <button type="button" className="movers__arrow" onClick={() => nudge(1)} aria-label="Ver anteriores">
+      <button type="button" className="movers__arrow" onClick={() => nudge(1)} aria-label={t('Ver anteriores', 'Show previous')}>
         ‹
       </button>
       <div
@@ -141,7 +143,7 @@ function Ticker({ movers, direction }: { movers: MarketMover[]; direction: 1 | -
           <MoverItems movers={movers} hidden />
         </div>
       </div>
-      <button type="button" className="movers__arrow" onClick={() => nudge(-1)} aria-label="Ver siguientes">
+      <button type="button" className="movers__arrow" onClick={() => nudge(-1)} aria-label={t('Ver siguientes', 'Show next')}>
         ›
       </button>
     </div>
@@ -155,7 +157,7 @@ function MoverRow({ label, tone, movers }: { label: string; tone: 'up' | 'down';
         <span aria-hidden="true">{tone === 'up' ? '▲' : '▼'}</span> {label}
       </span>
       {movers.length === 0 ? (
-        <span className="muted small">Sin datos</span>
+        <span className="muted small">{t('Sin datos', 'No data')}</span>
       ) : (
         // Ganadores avanzan hacia la izquierda y perdedores hacia la derecha
         <Ticker movers={movers} direction={tone === 'up' ? -1 : 1} />
@@ -206,36 +208,36 @@ export function MarketMoversBanner() {
   return (
     <section
       className="movers panel"
-      aria-label="Ganadores y perdedores del mercado"
+      aria-label={t('Ganadores y perdedores del mercado', 'Market gainers and losers')}
       aria-busy={movers.isLoading || movers.isRefreshing}
     >
       {/* Siempre visible, tambien con error, para poder cambiar de mercado. En telefono: selector de lado y de
           mercado en una sola linea */}
       {isPhone ? (
         <div className="movers__compact-bar">
-          <div className="segmented" role="group" aria-label="Ganadores o perdedores">
+          <div className="segmented" role="group" aria-label={t('Ganadores o perdedores', 'Gainers or losers')}>
             <button type="button" data-tone="up" aria-pressed={side === 'up'} onClick={() => setSide('up')}>
-              ▲ Ganadores
+              ▲ {t('Ganadores', 'Gainers')}
             </button>
             <button type="button" data-tone="down" aria-pressed={side === 'down'} onClick={() => setSide('down')}>
-              ▼ Perdedores
+              ▼ {t('Perdedores', 'Losers')}
             </button>
           </div>
           <select
             className="movers__select"
-            aria-label="Tipo de mercado"
+            aria-label={t('Tipo de mercado', 'Market type')}
             value={marketType}
             onChange={(event) => selectType(event.target.value as MarketType | '')}
           >
             {TYPE_OPTIONS.map((option) => (
               <option key={option.value || 'all'} value={option.value}>
-                {option.label}
+                {t(option.label)}
               </option>
             ))}
           </select>
         </div>
       ) : (
-        <div className="movers__filter" role="group" aria-label="Tipo de mercado">
+        <div className="movers__filter" role="group" aria-label={t('Tipo de mercado', 'Market type')}>
           {TYPE_OPTIONS.map((option) => (
             <button
               key={option.value || 'all'}
@@ -244,7 +246,7 @@ export function MarketMoversBanner() {
               aria-pressed={marketType === option.value}
               onClick={() => selectType(option.value)}
             >
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>
@@ -253,13 +255,13 @@ export function MarketMoversBanner() {
       {movers.error && !movers.data ? (
         <ErrorBanner error={movers.error} onRetry={movers.refetch} />
       ) : movers.isLoading || !movers.data ? (
-        <p className="muted small movers__loading">Cargando mercado…</p>
+        <p className="muted small movers__loading">{t('Cargando mercado…', 'Loading market…')}</p>
       ) : (
         <>
           {isPhone ? (
             <div className="movers__row movers__row--single" data-tone={side}>
               {(side === 'up' ? movers.data.gainers : movers.data.losers).length === 0 ? (
-                <span className="muted small">Sin datos</span>
+                <span className="muted small">{t('Sin datos', 'No data')}</span>
               ) : (
                 <Ticker
                   key={side}
@@ -270,15 +272,21 @@ export function MarketMoversBanner() {
             </div>
           ) : (
             <>
-              <MoverRow label="Ganadores" tone="up" movers={movers.data.gainers} />
-              <MoverRow label="Perdedores" tone="down" movers={movers.data.losers} />
+              <MoverRow label={t('Ganadores', 'Gainers')} tone="up" movers={movers.data.gainers} />
+              <MoverRow label={t('Perdedores', 'Losers')} tone="down" movers={movers.data.losers} />
             </>
           )}
           <p className="movers__meta muted small">
-            {!isPhone && 'Variacion desde la apertura diaria · '}
-            {isPhone ? 'Mercado' : 'mercado'} {movers.data.marketState === 'open' ? 'abierto' : 'cerrado'}
-            {asOf && !Number.isNaN(asOf.getTime()) && ` · ${timeFormat.format(asOf)}`}
-            {movers.error && ' · no se pudo actualizar'} · {!isPhone && 'Fuente: '}
+            {!isPhone && t('Variacion desde la apertura diaria · ', 'Change since the daily open · ')}
+            {movers.data.marketState === 'open'
+              ? isPhone
+                ? t('Mercado abierto', 'Market open')
+                : t('mercado abierto', 'market open')
+              : isPhone
+                ? t('Mercado cerrado', 'Market closed')
+                : t('mercado cerrado', 'market closed')}
+            {asOf && !Number.isNaN(asOf.getTime()) && ` · ${formats().time.format(asOf)}`}
+            {movers.error && t(' · no se pudo actualizar', ' · could not refresh')} · {!isPhone && t('Fuente: ', 'Source: ')}
             <a href="https://biquote.io/docs/#market" target="_blank" rel="noreferrer">
               biquote.io
             </a>

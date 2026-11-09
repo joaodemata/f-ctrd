@@ -2,6 +2,8 @@ import type { Opportunity, RiskManagement } from '../models/opportunity';
 import { formatDateTime, formatPrice, formatProbability } from '../utils/format';
 import { RecordAccess } from './RecordAccess';
 import { StatusBadge } from './StatusBadge';
+import { t } from '../i18n/language';
+import { catalogLabel } from '../models/catalog';
 
 function RiskList({ title, items }: { title: string; items: RiskManagement[] | null }) {
   return (
@@ -17,7 +19,7 @@ function RiskList({ title, items }: { title: string; items: RiskManagement[] | n
           ))}
         </ul>
       ) : (
-        <p className="muted">Sin definir</p>
+        <p className="muted">{t('Sin definir', 'Not set')}</p>
       )}
     </div>
   );
@@ -36,37 +38,50 @@ export function OpportunityDetail({ opportunity }: { opportunity: Opportunity })
           {opportunity.descriptionTrigger && <p className="muted">{opportunity.descriptionTrigger}</p>}
         </div>
         <div>
-          <h4>Precios</h4>
+          <h4>{t('Precios', 'Prices')}</h4>
           <dl className="kv">
-            <dt>Disparo</dt>
+            <dt>{t('Disparo', 'Trigger')}</dt>
             <dd>{formatPrice(opportunity.priceTriggered)}</dd>
-            <dt>Activacion</dt>
+            <dt>{t('Activacion', 'Activation')}</dt>
             <dd>{formatPrice(opportunity.priceActiveOpportunity)}</dd>
-            <dt>Cierre</dt>
+            <dt>{t('Cierre', 'Close')}</dt>
             <dd>{formatPrice(opportunity.priceAchieved)}</dd>
           </dl>
         </div>
         <RiskList title="Stop loss" items={opportunity.stopLoss} />
         <RiskList title="Take profit" items={opportunity.takeProfit} />
         <div>
-          <h4>Velas</h4>
+          <h4>{t('Velas', 'Candles')}</h4>
           <p>
-            Maximo {opportunity.maxCandlestickQty} de {opportunity.candlestickTimeframe || opportunity.tagCandlestickTimeframe}
+            {t('Maximo', 'Max')} {opportunity.maxCandlestickQty} {t('de', 'of')}{' '}
+            {catalogLabel({
+              tag: opportunity.tagCandlestickTimeframe,
+              name: opportunity.candlestickTimeframe || opportunity.tagCandlestickTimeframe,
+            })}
           </p>
-          <p className="muted">Actualizada {formatDateTime(opportunity.lastUpdatedAt)}</p>
+          <p className="muted">
+            {t('Actualizada', 'Updated')} {formatDateTime(opportunity.lastUpdatedAt)}
+          </p>
         </div>
         {opportunity.cancelReason && (
           <div>
-            <h4>Motivo de cancelacion</h4>
+            <h4>{t('Motivo de cancelacion', 'Cancel reason')}</h4>
             <p>{opportunity.cancelReason}</p>
           </div>
         )}
         <RecordAccess record={opportunity} />
       </div>
 
-      <h4>Condiciones ({conditions.length})</h4>
+      <h4>
+        {t('Condiciones', 'Conditions')} ({conditions.length})
+      </h4>
       {conditions.length === 0 ? (
-        <p className="muted">Sin condiciones: la oportunidad se activa solo con el trigger.</p>
+        <p className="muted">
+          {t(
+            'Sin condiciones: la oportunidad se activa solo con el trigger.',
+            'No conditions: the opportunity is activated by the trigger alone.',
+          )}
+        </p>
       ) : (
         <ul className="conditions">
           {conditions.map((condition) => (

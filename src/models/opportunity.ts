@@ -1,3 +1,4 @@
+import type { Localized } from '../i18n/language';
 import type { RecordOwner } from './user';
 import type { RecordVisibility } from './visibility';
 
@@ -25,18 +26,19 @@ export const OpportunityStatusTag = {
 export type OpportunityStatusTag = (typeof OpportunityStatusTag)[keyof typeof OpportunityStatusTag];
 
 // Catalogo de estados (common/constants.go). `name` es lo que se guarda en el campo status
-// y lo que matchea el search del backend
+// y lo que matchea el search del backend; `label` es lo que se muestra en el idioma de la interfaz
 export interface OpportunityStatusInfo {
   tag: OpportunityStatusTag;
   name: string;
+  label: Localized;
 }
 
 export const OPPORTUNITY_STATUSES: readonly OpportunityStatusInfo[] = [
-  { tag: OpportunityStatusTag.Ongoing, name: 'En Curso' },
-  { tag: OpportunityStatusTag.Active, name: 'Activa' },
-  { tag: OpportunityStatusTag.Finished, name: 'Finalizada' },
-  { tag: OpportunityStatusTag.Expired, name: 'Expirada' },
-  { tag: OpportunityStatusTag.Canceled, name: 'Cancelada' },
+  { tag: OpportunityStatusTag.Ongoing, name: 'En Curso', label: { es: 'En curso', en: 'Ongoing' } },
+  { tag: OpportunityStatusTag.Active, name: 'Activa', label: { es: 'Activa', en: 'Active' } },
+  { tag: OpportunityStatusTag.Finished, name: 'Finalizada', label: { es: 'Finalizada', en: 'Finished' } },
+  { tag: OpportunityStatusTag.Expired, name: 'Expirada', label: { es: 'Expirada', en: 'Expired' } },
+  { tag: OpportunityStatusTag.Canceled, name: 'Cancelada', label: { es: 'Cancelada', en: 'Canceled' } },
 ];
 
 // Estado de cada condicion dentro de la oportunidad (GENERIC_STATUS en common/constants.go)

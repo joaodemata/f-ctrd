@@ -4,6 +4,8 @@ import { visibilityLabel } from '../models/visibility';
 import { formatDateTime } from '../utils/format';
 import { StatusBadge } from './StatusBadge';
 import { TriggerDetail } from './TriggerDetail';
+import { t } from '../i18n/language';
+import { catalogLabel } from '../models/catalog';
 
 interface TriggersTableProps {
   triggers: Trigger[];
@@ -20,7 +22,7 @@ export function TriggersTable({
   triggers,
   onEdit,
   detailActions,
-  emptyMessage = 'No hay triggers con estos filtros.',
+  emptyMessage = t('No hay triggers con estos filtros.', 'No triggers match these filters.'),
 }: TriggersTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -33,14 +35,16 @@ export function TriggersTable({
       <table className="table table--cards">
         <thead>
           <tr>
-            <th scope="col" aria-label="Expandir" />
+            <th scope="col" aria-label={t('Expandir', 'Expand')} />
             <th scope="col">Trigger</th>
             <th scope="col">Asset</th>
-            <th scope="col">Accion</th>
-            <th scope="col">Velas</th>
-            <th scope="col" className="num">Condiciones</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Creado</th>
+            <th scope="col">{t('Accion', 'Action')}</th>
+            <th scope="col">{t('Velas', 'Candles')}</th>
+            <th scope="col" className="num">
+              {t('Condiciones', 'Conditions')}
+            </th>
+            <th scope="col">{t('Estado', 'Status')}</th>
+            <th scope="col">{t('Creado', 'Created')}</th>
           </tr>
         </thead>
         <tbody>
@@ -54,7 +58,7 @@ export function TriggersTable({
                       type="button"
                       className="icon-button"
                       aria-expanded={expanded}
-                      aria-label={expanded ? 'Ocultar detalle' : 'Ver detalle'}
+                      aria-label={expanded ? t('Ocultar detalle', 'Hide details') : t('Ver detalle', 'Show details')}
                       onClick={() => setExpandedId(expanded ? null : trigger.id)}
                     >
                       {expanded ? '▾' : '▸'}
@@ -64,20 +68,24 @@ export function TriggersTable({
                     <strong>{trigger.name}</strong>
                     <div className="muted small">
                       {trigger.tag}
-                      {previousTriggerId(trigger) && ' · actualizado'}
+                      {previousTriggerId(trigger) && t(' · actualizado', ' · updated')}
                       {` · ${visibilityLabel(trigger)}`}
                     </div>
                   </td>
                   <td data-label="Asset">{trigger.asset || trigger.tagAsset}</td>
-                  <td data-label="Accion">{trigger.action || trigger.tagAction}</td>
-                  <td data-label="Velas">
-                    {trigger.maxCandlestickQty} × {trigger.candlestickTimeframe || trigger.tagCandlestickTimeframe}
+                  <td data-label={t('Accion', 'Action')}>{trigger.action || trigger.tagAction}</td>
+                  <td data-label={t('Velas', 'Candles')}>
+                    {trigger.maxCandlestickQty} ×{' '}
+                    {catalogLabel({
+                      tag: trigger.tagCandlestickTimeframe,
+                      name: trigger.candlestickTimeframe || trigger.tagCandlestickTimeframe,
+                    })}
                   </td>
-                  <td className="num" data-label="Condiciones">{trigger.conditions?.length ?? 0}</td>
-                  <td data-label="Estado">
+                  <td className="num" data-label={t('Condiciones', 'Conditions')}>{trigger.conditions?.length ?? 0}</td>
+                  <td data-label={t('Estado', 'Status')}>
                     <StatusBadge tag={trigger.tagStatus} label={trigger.status || trigger.tagStatus} />
                   </td>
-                  <td data-label="Creado">{formatDateTime(trigger.createdDate)}</td>
+                  <td data-label={t('Creado', 'Created')}>{formatDateTime(trigger.createdDate)}</td>
                 </tr>
                 {expanded && (
                   <tr className="table__detail">

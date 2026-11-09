@@ -1,3 +1,4 @@
+import type { Localized } from '../i18n/language';
 import type { ObjectId } from './opportunity';
 import type { RecordOwner } from './user';
 
@@ -66,7 +67,7 @@ export const TRIGGER_CODE_WEBHOOK_PLACEHOLDER = '{{ID_WEBHOOK}}';
 
 export interface StatusOption {
   tag: string;
-  name: string;
+  label: Localized;
 }
 
 // AGENT_THESIS_STATUS (common/constants.go)
@@ -77,9 +78,9 @@ export const AgentThesisStatusTag = {
 } as const;
 
 export const AGENT_THESIS_STATUSES: readonly StatusOption[] = [
-  { tag: AgentThesisStatusTag.Pending, name: 'Pendiente' },
-  { tag: AgentThesisStatusTag.Processing, name: 'Procesando' },
-  { tag: AgentThesisStatusTag.Processed, name: 'Procesada' },
+  { tag: AgentThesisStatusTag.Pending, label: { es: 'Pendiente', en: 'Pending' } },
+  { tag: AgentThesisStatusTag.Processing, label: { es: 'Procesando', en: 'Processing' } },
+  { tag: AgentThesisStatusTag.Processed, label: { es: 'Procesada', en: 'Processed' } },
 ];
 
 // AGENT_RUN_STATUS (common/constants.go)
@@ -91,10 +92,10 @@ export const AgentRunStatusTag = {
 } as const;
 
 export const AGENT_RUN_STATUSES: readonly StatusOption[] = [
-  { tag: AgentRunStatusTag.Running, name: 'En ejecucion' },
-  { tag: AgentRunStatusTag.Success, name: 'Exitosa' },
-  { tag: AgentRunStatusTag.NeedsInput, name: 'Requiere informacion' },
-  { tag: AgentRunStatusTag.Failed, name: 'Fallida' },
+  { tag: AgentRunStatusTag.Running, label: { es: 'En ejecucion', en: 'Running' } },
+  { tag: AgentRunStatusTag.Success, label: { es: 'Exitosa', en: 'Successful' } },
+  { tag: AgentRunStatusTag.NeedsInput, label: { es: 'Requiere informacion', en: 'Needs input' } },
+  { tag: AgentRunStatusTag.Failed, label: { es: 'Fallida', en: 'Failed' } },
 ];
 
 // Agentes que registran pasos en una corrida (AgentRunStepFormat.agent)

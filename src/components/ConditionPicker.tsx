@@ -5,6 +5,7 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import type { Condition } from '../models/condition';
 import { ErrorBanner } from './ErrorBanner';
 import { StatusBadge } from './StatusBadge';
+import { t } from '../i18n/language';
 
 const PICKER_LIMIT = 20;
 
@@ -40,14 +41,14 @@ export function ConditionPicker({ value, onChange, disabled = false }: Condition
   return (
     <div className="picker">
       {value.length > 0 && (
-        <ol className="chips" aria-label="Condiciones elegidas">
+        <ol className="chips" aria-label={t('Condiciones elegidas', 'Selected conditions')}>
           {value.map((condition) => (
             <li key={condition.id} className="chip">
               <span>{condition.name}</span>
               <button
                 type="button"
                 className="chip__remove"
-                aria-label={`Quitar ${condition.name}`}
+                aria-label={t(`Quitar ${condition.name}`, `Remove ${condition.name}`)}
                 onClick={() => toggle(condition)}
                 disabled={disabled}
               >
@@ -60,12 +61,15 @@ export function ConditionPicker({ value, onChange, disabled = false }: Condition
 
       <input
         type="search"
-        placeholder="Buscar por tag, nombre, descripcion, tipo, proveedor o callback"
+        placeholder={t(
+          'Buscar por tag, nombre, descripcion, tipo, proveedor o callback',
+          'Search by tag, name, description, type, provider or callback',
+        )}
         value={search}
         maxLength={100}
         onChange={(event) => setSearch(event.target.value)}
         disabled={disabled}
-        aria-label="Buscar condicion"
+        aria-label={t('Buscar condicion', 'Search condition')}
       />
 
       {conditions.error && (
@@ -74,9 +78,13 @@ export function ConditionPicker({ value, onChange, disabled = false }: Condition
 
       <div className="option-list" aria-busy={conditions.isLoading || conditions.isRefreshing}>
         {conditions.isLoading ? (
-          <p className="empty">Cargando condiciones…</p>
+          <p className="empty">{t('Cargando condiciones…', 'Loading conditions…')}</p>
         ) : options.length === 0 ? (
-          <p className="empty">{debouncedSearch ? 'No hay condiciones con esta busqueda.' : 'Todavia no hay condiciones.'}</p>
+          <p className="empty">
+            {debouncedSearch
+              ? t('No hay condiciones con esta busqueda.', 'No conditions match this search.')
+              : t('Todavia no hay condiciones.', 'There are no conditions yet.')}
+          </p>
         ) : (
           options.map((condition) => (
             <label key={condition.id} className="option-list__item">
@@ -103,7 +111,10 @@ export function ConditionPicker({ value, onChange, disabled = false }: Condition
       </div>
       {total > options.length && (
         <span className="form-field__hint">
-          Mostrando las {options.length} mas recientes de {total}; escribe para acotar la busqueda.
+          {t(
+            `Mostrando las ${options.length} mas recientes de ${total}; escribe para acotar la busqueda.`,
+            `Showing the ${options.length} most recent of ${total}; type to narrow the search.`,
+          )}
         </span>
       )}
     </div>
