@@ -1,13 +1,18 @@
 import { useCallback, useState } from 'react';
 import { pollIntervalMs } from '../api/config';
+import { ServerEventType } from '../api/events';
 import { listOpportunities } from '../api/opportunities';
 import type { ApiMeta, ApiResult } from '../api/types';
 import { useApiQuery } from '../hooks/useApiQuery';
 import { useAuth } from '../hooks/useAuth';
+import { useServerEvent } from '../hooks/useServerEvent';
 import { OPPORTUNITY_STATUSES, type OpportunityStatusInfo } from '../models/opportunity';
 import { escapeRegex } from '../utils/format';
+import { EconomicCalendarPanel } from './EconomicCalendarPanel';
 import { ErrorBanner } from './ErrorBanner';
 import { Filters, type FilterValues } from './Filters';
+import { InfoPopover } from './InfoPopover';
+import { MarketMoversBanner } from './MarketMoversBanner';
 import { OpportunitiesTable } from './OpportunitiesTable';
 import { Pagination } from './Pagination';
 import { StatusSummary } from './StatusSummary';
@@ -36,10 +41,19 @@ export function Dashboard() {
   const auth = useAuth();
   const sessionKey = auth.user?.id ?? auth.status;
 
+  // C-TRD avisa por websocket cuando cambian las oportunidades (agrupa los cambios en ventanas de 5 s). Mientras el
+  // websocket esta caido se vuelve al polling, y al reconectar se recarga una vez por los eventos perdidos
+  const refreshAll = () => {
+    list.refetch();
+    counts.refetch();
+  };
+  const live = useServerEvent(ServerEventType.OpportunitiesUpdated, () => refreshAll());
+  const fallbackPollMs = live ? 0 : pollIntervalMs;
+
   const list = useApiQuery(
     (signal) => listOpportunities({ limit, page, search, ...dateRange }, signal),
     [limit, page, search, dateRange.startDate, dateRange.endDate, sessionKey],
-    { pollIntervalMs },
+    { pollIntervalMs: fallbackPollMs },
   );
 
   // Totales por estado: una consulta con limit=1 por estado, usando solo el campo page (total)
@@ -61,7 +75,7 @@ export function Dashboard() {
       return { ok: true, data: totals, meta };
     },
     [dateRange.startDate, dateRange.endDate, sessionKey],
-    { pollIntervalMs },
+    { pollIntervalMs: fallbackPollMs },
   );
 
   const allTotal = counts.data
@@ -79,67 +93,70 @@ export function Dashboard() {
     setPage(1);
   };
 
-  const refreshAll = () => {
-    list.refetch();
-    counts.refetch();
-  };
-
   return (
     <main className="dashboard">
-      <div className="dashboard__head">
-        <div>
-          <h1>Oportunidades</h1>
-          <p className="muted small">
-            {list.lastUpdated ? `Actualizado ${list.lastUpdated.toLocaleTimeString('es')}` : 'Cargando…'}
-            {pollIntervalMs > 0 && ` · refresco cada ${Math.round(pollIntervalMs / 1000)}s`}
-          </p>
-          <p className="muted small">Todos los precios estan expresados en USD.</p>
+      {/* Titulo con el estado en vivo; las notas van dentro del boton "i" para no ocupar lineas */}
+      <div className="dashboard__head dashboard__title">
+        <h1>Oportunidades</h1>
+        {live && (
+          <span className="live-badge" title="Se actualiza sola cuando cambian las oportunidades">
+            En vivo
+          </span>
+        )}
+        <InfoPopover label="Informacion sobre las oportunidades">
+          <p>{list.lastUpdated ? `Actualizado a las ${list.lastUpdated.toLocaleTimeString('es')}.` : 'Cargando…'}</p>
+          <p>Todos los precios estan expresados en USD.</p>
           {auth.status === 'anonymous' && (
-            <p className="muted small">
+            <p>
               Sin sesion solo ves las oportunidades publicas. <a href="#/login">Inicia sesion</a> para ver tambien las
               tuyas y las compartidas contigo.
             </p>
           )}
-        </div>
-        <button type="button" className="button" onClick={refreshAll} disabled={list.isLoading || list.isRefreshing}>
-          {list.isRefreshing ? 'Actualizando…' : 'Actualizar'}
-        </button>
+        </InfoPopover>
       </div>
 
-      <StatusSummary counts={counts.data} total={allTotal} selected={status?.tag ?? null} onSelect={handleStatus} />
-      {counts.error && !list.error && <ErrorBanner error={counts.error} onRetry={counts.refetch} stale={!!counts.data} />}
+      <MarketMoversBanner />
 
-      <Filters value={filters} onChange={handleFilters} />
-      {status && (
-        <p className="muted small">
-          Filtrando por estado <strong>{status.name}</strong>; el texto de busqueda se ignora mientras el estado este
-          seleccionado.
-        </p>
-      )}
+      <div className="dashboard__layout">
+        <div className="dashboard__main">
+          <StatusSummary counts={counts.data} total={allTotal} selected={status?.tag ?? null} onSelect={handleStatus} />
+          {counts.error && !list.error && <ErrorBanner error={counts.error} onRetry={counts.refetch} stale={!!counts.data} />}
 
-      {list.error && <ErrorBanner error={list.error} onRetry={list.refetch} stale={!!list.data} />}
+          <Filters value={filters} onChange={handleFilters} />
+          {status && (
+            <p className="muted small">
+              Filtrando por estado <strong>{status.name}</strong>; el texto de busqueda se ignora mientras el estado este
+              seleccionado.
+            </p>
+          )}
 
-      <section className="panel" aria-busy={list.isLoading || list.isRefreshing}>
-        {list.isLoading ? (
-          <p className="empty">Cargando oportunidades…</p>
-        ) : (
-          list.data && (
-            <>
-              <OpportunitiesTable opportunities={list.data.opportunities} />
-              <Pagination
-                page={page}
-                limit={limit}
-                total={list.data.page}
-                onPageChange={setPage}
-                onLimitChange={(next) => {
-                  setLimit(next);
-                  setPage(1);
-                }}
-              />
-            </>
-          )
-        )}
-      </section>
+          {list.error && <ErrorBanner error={list.error} onRetry={list.refetch} stale={!!list.data} />}
+
+          <section className="panel" aria-busy={list.isLoading || list.isRefreshing}>
+            {list.isLoading ? (
+              <p className="empty">Cargando oportunidades…</p>
+            ) : (
+              list.data && (
+                <>
+                  <OpportunitiesTable opportunities={list.data.opportunities} />
+                  <Pagination
+                    page={page}
+                    limit={limit}
+                    total={list.data.page}
+                    onPageChange={setPage}
+                    onLimitChange={(next) => {
+                      setLimit(next);
+                      setPage(1);
+                    }}
+                  />
+                </>
+              )
+            )}
+          </section>
+        </div>
+
+        <EconomicCalendarPanel />
+      </div>
     </main>
   );
 }
