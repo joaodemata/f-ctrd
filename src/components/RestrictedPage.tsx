@@ -2,8 +2,15 @@ import { useAuth } from '../hooks/useAuth';
 import { privilegeLabel, userDisplayName } from '../models/user';
 import { t } from '../i18n/language';
 
-// Se muestra en lugar de las rutas del super usuario (triggers, condiciones y Google Trends)
-export function RestrictedPage() {
+interface RestrictedPageProps {
+  // superUser: rutas del super usuario (triggers, condiciones, Google Trends...). portfolioUser: rutas que necesitan
+  // sesion de un usuario con portfolio (super usuario o generico, no el agente)
+  requirement?: 'superUser' | 'portfolioUser';
+}
+
+// Se muestra en lugar de las rutas que la sesion actual no puede abrir
+export function RestrictedPage({ requirement = 'superUser' }: RestrictedPageProps) {
+  const forPortfolio = requirement === 'portfolioUser';
   const auth = useAuth();
   // Ruta pedida con sus parametros, para volver a ella despues del login
   const target = window.location.hash.replace(/^#/, '') || '/';
@@ -26,17 +33,24 @@ export function RestrictedPage() {
           <p>
             {t('Tu usuario', 'Your user')} <strong>{userDisplayName(auth.user)}</strong> (
             {privilegeLabel(auth.user.tagPrivilege, auth.user.namePrivilege)})
-            {t(
-              ' no tiene permisos para esta seccion: es solo del super usuario.',
-              ' has no access to this section: it is for the super user only.',
-            )}
+            {forPortfolio
+              ? t(' no tiene portafolio.', ' has no portfolio.')
+              : t(
+                  ' no tiene permisos para esta seccion: es solo del super usuario.',
+                  ' has no access to this section: it is for the super user only.',
+                )}
           </p>
         ) : (
           <p>
-            {t(
-              'Esta seccion es solo del super usuario. Inicia sesion para continuar.',
-              'This section is for the super user only. Log in to continue.',
-            )}
+            {forPortfolio
+              ? t(
+                  'Inicia sesion para ver tu portafolio y registrar tus transacciones.',
+                  'Log in to see your portfolio and record your transactions.',
+                )
+              : t(
+                  'Esta seccion es solo del super usuario. Inicia sesion para continuar.',
+                  'This section is for the super user only. Log in to continue.',
+                )}
           </p>
         )}
         <div className="form-actions">
