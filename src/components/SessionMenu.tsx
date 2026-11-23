@@ -30,10 +30,22 @@ export function SessionMenu() {
 
   return (
     <span className="session-menu">
-      <span className="session-menu__user" title={privilegeLabel(auth.user.tagPrivilege, auth.user.namePrivilege)}>
-        {userDisplayName(auth.user)}
-        {auth.isSuperUser && <span className="session-menu__badge">Super</span>}
-      </span>
+      {auth.isSuperUser ? (
+        // El perfil del super usuario: su contraseña, alta de usuarios y contraseñas de otros usuarios
+        <a
+          className="session-menu__user session-menu__user--link"
+          href="#/perfil"
+          aria-current={path === '/perfil' ? 'page' : undefined}
+          title={t('Perfil, usuarios y contraseñas', 'Profile, users and passwords')}
+        >
+          {userDisplayName(auth.user)}
+          <span className="session-menu__badge">Super</span>
+        </a>
+      ) : (
+        <span className="session-menu__user" title={privilegeLabel(auth.user.tagPrivilege, auth.user.namePrivilege)}>
+          {userDisplayName(auth.user)}
+        </span>
+      )}
       <button type="button" className="button button--small" onClick={handleLogout} disabled={isLoggingOut}>
         {isLoggingOut ? t('Cerrando…', 'Logging out…') : t('Cerrar sesion', 'Log out')}
       </button>

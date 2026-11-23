@@ -1,5 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { getMe, login as loginRequest, logout as logoutRequest, type LoginBody } from '../api/auth';
+import {
+  getMe,
+  login as loginRequest,
+  logout as logoutRequest,
+  updatePassword,
+  type LoginBody,
+  type UpdatePasswordBody,
+} from '../api/auth';
 import type { ApiError } from '../api/errors';
 import { clearSession, getSessionToken, saveSession, subscribeSession } from '../api/session';
 import type { ApiResult } from '../api/types';
@@ -16,6 +23,8 @@ export interface AuthState {
   error: ApiError | undefined;
   login: (body: LoginBody, signal?: AbortSignal) => Promise<ApiResult<User>>;
   logout: () => Promise<void>;
+  // Cambia la contraseña del usuario de la sesion y guarda el token nuevo que entrega C-TRD
+  changePassword: (body: UpdatePasswordBody, signal?: AbortSignal) => Promise<ApiResult<null>>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -74,9 +83,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('anonymous');
   }, []);
 
+  // C-TRD cierra todas las sesiones del usuario (tambien la actual) y abre una nueva para este dispositivo
+  const changePassword = useCallback(async (body: UpdatePasswordBody, signal?: AbortSignal): Promise<ApiResult<null>> => {
+    const result = await updatePassword(body, signal);
+    if (!result.ok) return result;
+    saveSession(result.data.token, result.data.expiresAt);
+    return { ok: true, data: null, meta: result.meta };
+  }, []);
+
   const value = useMemo<AuthState>(
-    () => ({ status, user, isSuperUser: isSuperUser(user), error, login, logout }),
-    [status, user, error, login, logout],
+    () => ({ status, user, isSuperUser: isSuperUser(user), error, login, logout, changePassword }),
+    [status, user, error, login, logout, changePassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
