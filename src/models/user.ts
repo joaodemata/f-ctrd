@@ -73,3 +73,8 @@ export function userDisplayName(user: User): string {
   const fullName = [user.name, user.lastName].filter(Boolean).join(' ');
   return fullName || user.username;
 }
+
+// Privilegios con portfolio (portfolioPrivileges en routers/index.go): el agente no tiene
+export function canUsePortfolio(user: User | null | undefined): boolean {
+  return user?.idTypePrivilege === USER_PRIVILEGE.superUser.id || user?.idTypePrivilege === USER_PRIVILEGE.genericUser.id;
+}

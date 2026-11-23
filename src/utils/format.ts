@@ -9,6 +9,9 @@ const format = memoByLanguage((locale) => ({
   date: new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }),
   price: new Intl.NumberFormat(locale, { maximumFractionDigits: 8 }),
   percent: new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 1 }),
+  // Montos en dolares del portfolio: siempre dos decimales
+  money: new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+  signedPercent: new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2, signDisplay: 'exceptZero' }),
 }));
 
 // time.Time cero de Go, se trata como "sin fecha"
@@ -32,6 +35,34 @@ export function formatDate(value: string | null | undefined): string {
 
 export function formatPrice(value: number | null | undefined): string {
   return value === null || value === undefined ? '—' : `$${format().price.format(value)}`;
+}
+
+// Cantidad de un activo (hasta 8 decimales, sin simbolo)
+export function formatQuantity(value: number | null | undefined): string {
+  return value === null || value === undefined ? '—' : format().price.format(value);
+}
+
+// Monto en dolares con dos decimales (ej: "$1,234.50", "-$12.00")
+export function formatMoney(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '—';
+  return `${value < 0 ? '-' : ''}$${format().money.format(Math.abs(value))}`;
+}
+
+// Ganancia o perdida con signo (ej: "+$12.30", "-$4.00")
+export function formatSignedMoney(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '—';
+  return value > 0 ? `+${formatMoney(value)}` : formatMoney(value);
+}
+
+// ROI como fraccion (0.123 -> "+12.3%")
+export function formatSignedPercent(value: number | null | undefined): string {
+  return value === null || value === undefined ? '—' : format().signedPercent.format(value);
+}
+
+// Tono de un resultado para data-tone en styles.css
+export function pnlTone(value: number | null | undefined): 'up' | 'down' | undefined {
+  if (value === null || value === undefined || value === 0) return undefined;
+  return value > 0 ? 'up' : 'down';
 }
 
 export function formatProbability(value: number | undefined): string {

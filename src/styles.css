@@ -2595,6 +2595,187 @@ a {
   }
 }
 
+/* Portafolio */
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Ganancia (verde) o perdida (rojo); sin data-tone queda con el color del texto */
+.pnl[data-tone='up'],
+.summary__card[data-tone='up'] {
+  --tone: var(--status-active);
+  color: var(--status-active);
+}
+
+.pnl[data-tone='down'],
+.summary__card[data-tone='down'] {
+  --tone: var(--status-canceled);
+  color: var(--status-canceled);
+}
+
+.pnl {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Tarjetas de metricas: mismo aspecto que las de estado pero sin ser botones */
+.summary--metrics {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.summary__card--static {
+  cursor: default;
+}
+
+.summary__card--static:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.summary__card--static:not([data-tone]) .summary__value {
+  color: var(--text);
+}
+
+.summary__hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.portfolio-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.portfolio-head__info {
+  min-width: 0;
+  flex: 1 1 280px;
+}
+
+.portfolio-head__info h2,
+.portfolio-head__info p {
+  margin: 0;
+}
+
+.portfolio-head__info p {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.portfolio-head__tag {
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.portfolio-head .error-banner {
+  flex-basis: 100%;
+}
+
+.portfolio-empty h2 {
+  margin-top: 0;
+}
+
+.portfolio-roi__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.table__row[data-closed='true'] {
+  color: var(--muted);
+}
+
+.transaction-type {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tone, var(--muted));
+  background: color-mix(in srgb, var(--tone, var(--muted)) 14%, transparent);
+}
+
+[data-type='TRANSACTION-BUY'],
+[data-type='TRANSACTION-DEPOSIT'] {
+  --tone: var(--status-ongoing);
+}
+
+[data-type='TRANSACTION-SELL'],
+[data-type='TRANSACTION-DIVIDEND'] {
+  --tone: var(--status-active);
+}
+
+[data-type='TRANSACTION-WITHDRAWAL'] {
+  --tone: var(--status-canceled);
+}
+
+.chip-group .button[aria-pressed='true'][data-type] {
+  border-color: var(--tone);
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 12%, var(--surface));
+}
+
+.transaction-comment {
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.transaction-form__total {
+  margin: 0;
+}
+
+/* Formularios en dialog: hoja inferior en telefono (.sheet) y ventana centrada en pantallas mas anchas */
+.sheet--form .sheet__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 641px) {
+  .sheet--form {
+    max-width: 640px;
+    margin: auto;
+    border-bottom: 1px solid var(--border);
+    border-radius: 16px;
+  }
+
+  .sheet--form .sheet__body {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sheet--form {
+    max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
+  }
+
+  /* Ocho metricas en cuatro filas de dos */
+  .summary--metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary--metrics .summary__value {
+    font-size: 1.15rem;
+  }
+
+  .portfolio-head__actions {
+    width: 100%;
+  }
+
+  .portfolio-head__actions .button--primary {
+    flex: 1 1 100%;
+  }
+}
+
 /* Portada del PDF de la ayuda: solo en impresion */
 .help-cover {
   display: none;
