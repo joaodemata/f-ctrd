@@ -12,6 +12,8 @@ import { LanguageSwitch } from './components/LanguageSwitch';
 import { LoginPage } from './components/LoginPage';
 import { MarketBackdrop } from './components/MarketBackdrop';
 import { NavBar, type NavItem } from './components/NavBar';
+import { ProfilePage } from './components/ProfilePage';
+import { PortfolioPage } from './components/PortfolioPage';
 import { RestrictedPage } from './components/RestrictedPage';
 import { SeedwiseLogo } from './components/SeedwiseLogo';
 import { SessionMenu } from './components/SessionMenu';
@@ -20,6 +22,7 @@ import { TriggerVersionsPage } from './components/TriggerVersionsPage';
 import { TriggersPage } from './components/TriggersPage';
 import { useAuth } from './hooks/useAuth';
 import { useHashRoute } from './hooks/useHashRoute';
+import { canUsePortfolio } from './models/user';
 
 interface Route extends NavItem {
   component: ComponentType;
@@ -27,12 +30,15 @@ interface Route extends NavItem {
   navPath?: string;
   // Solo el super usuario la ve en la barra y puede abrirla (C-TRD exige su sesion en las escrituras)
   superUser?: boolean;
+  // Necesita sesion de un usuario con portfolio (super usuario o generico); sale en la barra solo con esa sesion
+  portfolioUser?: boolean;
   // Rutas que no salen en la barra (login)
   hidden?: boolean;
 }
 
 const ROUTES: readonly Route[] = [
   { path: '/', label: { es: 'Oportunidades', en: 'Opportunities' }, component: Dashboard },
+  { path: '/portafolio', label: { es: 'Portafolio', en: 'Portfolio' }, component: PortfolioPage, portfolioUser: true },
   {
     path: '/triggers',
     label: { es: 'Triggers', en: 'Triggers' },
@@ -101,6 +107,8 @@ const ROUTES: readonly Route[] = [
   },
   { path: '/ayuda', label: { es: 'Ayuda', en: 'Help' }, component: HelpPage },
   { path: '/login', label: { es: 'Iniciar sesion', en: 'Log in' }, component: LoginPage, hidden: true },
+  // Se abre desde el nombre del usuario en SessionMenu
+  { path: '/perfil', label: { es: 'Perfil', en: 'Profile' }, component: ProfilePage, hidden: true, superUser: true },
 ];
 
 export function App() {
@@ -110,11 +118,10 @@ export function App() {
   const [logoRun, setLogoRun] = useState(0);
   // Una ruta desconocida muestra las oportunidades
   const route = ROUTES.find((item) => item.path === path) ?? ROUTES[0]!;
-  const allowed = !route.superUser || auth.isSuperUser;
-  const Page = allowed ? route.component : RestrictedPage;
-  const navItems = ROUTES.filter(
-    (item) => item.navPath === undefined && !item.hidden && (!item.superUser || auth.isSuperUser),
-  );
+  const hasPortfolio = canUsePortfolio(auth.user);
+  const canOpen = (item: Route) => (!item.superUser || auth.isSuperUser) && (!item.portfolioUser || hasPortfolio);
+  const allowed = canOpen(route);
+  const navItems = ROUTES.filter((item) => item.navPath === undefined && !item.hidden && canOpen(item));
 
   return (
     <>
@@ -129,7 +136,11 @@ export function App() {
         <LanguageSwitch />
         <SessionMenu />
       </header>
-      <Page key={`${route.path}:${allowed}`} />
+      {allowed ? (
+        <route.component key={`${route.path}:${allowed}`} />
+      ) : (
+        <RestrictedPage key={`${route.path}:${allowed}`} requirement={route.superUser ? 'superUser' : 'portfolioUser'} />
+      )}
       <Disclaimer />
     </>
   );
