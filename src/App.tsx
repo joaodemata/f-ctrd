@@ -12,6 +12,7 @@ import { LanguageSwitch } from './components/LanguageSwitch';
 import { LoginPage } from './components/LoginPage';
 import { MarketBackdrop } from './components/MarketBackdrop';
 import { NavBar, type NavItem } from './components/NavBar';
+import { ProfilePage } from './components/ProfilePage';
 import { PortfolioPage } from './components/PortfolioPage';
 import { RestrictedPage } from './components/RestrictedPage';
 import { SeedwiseLogo } from './components/SeedwiseLogo';
@@ -106,6 +107,8 @@ const ROUTES: readonly Route[] = [
   },
   { path: '/ayuda', label: { es: 'Ayuda', en: 'Help' }, component: HelpPage },
   { path: '/login', label: { es: 'Iniciar sesion', en: 'Log in' }, component: LoginPage, hidden: true },
+  // Se abre desde el nombre del usuario en SessionMenu
+  { path: '/perfil', label: { es: 'Perfil', en: 'Profile' }, component: ProfilePage, hidden: true, superUser: true },
 ];
 
 export function App() {

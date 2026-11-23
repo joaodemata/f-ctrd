@@ -427,6 +427,18 @@ p {
   font-weight: 600;
 }
 
+.session-menu__user--link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.session-menu__user--link:hover,
+.session-menu__user--link[aria-current='page'] {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .session-menu__badge {
   padding: 1px 6px;
   border-radius: 999px;
